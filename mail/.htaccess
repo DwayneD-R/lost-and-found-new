@@ -1,0 +1,6 @@
+# Only send_job.php is called over HTTP (by the site itself); nothing else here is meant to be opened from a browser.
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(?!send_job\.php$).*$">
+        Require all denied
+    </FilesMatch>
+</IfModule>

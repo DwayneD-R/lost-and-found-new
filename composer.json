@@ -1,0 +1,7 @@
+{
+    "name": "hccd/lost-and-found",
+    "description": "Lost and Found Web Application for Holy Child College of Davao",
+    "require": {
+        "phpmailer/phpmailer": "^7.1"
+    }
+}

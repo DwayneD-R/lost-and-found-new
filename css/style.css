@@ -1,0 +1,3260 @@
+/* ==========================================================================
+   Holy Child College of Davao — Lost & Found
+   Design system: institutional maroon/navy, serif+sans pairing, hairline
+   structure. Built for a campus service, not a consumer SaaS product.
+   ========================================================================== */
+
+:root {
+    /* Core palette — grounded in the college's maroon/navy identity */
+    --maroon:       #7C1F2B;
+    --maroon-dark:  #5E1620;
+    --maroon-tint:  #F6E9EA;
+    --navy:         #142542;
+    --navy-dark:    #0C1A2E;
+    --gold:         #B78A2E;
+    --gold-tint:    #F6EEDC;
+
+    /* Neutrals — warm paper, not clinical grey */
+    --bg:           #F6F4EF;
+    --card-bg:      #FFFFFF;
+    --border:       #E3DFD3;
+    --border-strong:#CFC9B8;
+    --ink:          #23201B;
+    --muted:        #746E60;
+
+    /* Functional */
+    --success:      #1E6B3C;
+    --success-tint: #E7F1E9;
+    --error:        #A5291F;
+    --error-tint:   #FBEBE8;
+    --info:          #1C4B7C;
+    --info-tint:    #E8F0F8;
+
+    --radius:       6px;
+    --radius-sm:    4px;
+    --font-display: 'Questrial', 'Helvetica Neue', Arial, sans-serif;   /* headers (Google Fonts; Questrial has one weight) */
+    --font-body:    'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html {
+    -webkit-text-size-adjust: 100%;
+    /* Reserve the scrollbar's width on every page (whether or not it's
+       currently needed) so content doesn't shift sideways when a page's
+       height crosses the point where a scrollbar appears/disappears. */
+    scrollbar-gutter: stable;
+}
+
+/* Slim scrollbars with no arrow buttons; WebKit browsers show the logo-color
+   gradient, while Firefox uses the closest solid-color fallback. */
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+    background: #A6A6A6;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+    background: #858585;
+    background-clip: padding-box;
+}
+*::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+@supports not selector(*::-webkit-scrollbar) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #A6A6A6 transparent;
+    }
+}
+
+/* Keep the nested messenger scroll areas on the same logo-color gradient. */
+.messenger-list-pane .convo-list::-webkit-scrollbar-thumb,
+.chat-window::-webkit-scrollbar-thumb {
+    background: #A6A6A6;
+    background-clip: padding-box;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Campus photo behind the whole site: fixed to the window (it doesn't move when you scroll), at 75% opacity
+   (25% faded) and lightly blurred. It sits behind everything; the header has a solid white fill so it never shows there.
+   The negative inset hides the soft edges the blur would otherwise leave. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: -12px;
+    z-index: -1;
+    background: url('../assets/campus-bg.webp') center calc(100% + 120px) / cover no-repeat;
+    opacity: 0.35;
+    filter: blur(1px);
+    pointer-events: none;
+}
+
+h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.25;
+    color: var(--navy);
+    margin: 0 0 0.5em;
+}
+h1 { font-size: 1.85rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.05rem; }
+
+a { color: var(--maroon); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Header                                                                  */
+/* ---------------------------------------------------------------------- */
+.site-header {
+    background: #FFFFFF;   /* solid white: the page background photo must never show through the bar */
+    color: var(--navy);
+    border-bottom: 3px solid var(--navy);
+}
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.brand {
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.brand:hover { text-decoration: none; opacity: 0.85; }
+.header-inner .brand { margin-right: auto; }
+.brand-logo {
+    height: 38px;
+    width: auto;
+    display: block;
+}
+.site-header nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.site-header nav a {
+    color: var(--navy);
+    opacity: 0.72;
+    margin-left: 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 5px 0;
+    border-bottom: 2px solid transparent;
+}
+.site-header nav a:hover {
+    color: var(--navy);
+    opacity: 1;
+    text-decoration: none;
+    border-bottom-color: var(--navy);
+}
+.guest-nav a { color: var(--navy); font-weight: 600; }
+.site-header .guest-nav a:hover { color: var(--maroon); border-bottom-color: var(--maroon); }
+
+/* ---------------------------------------------------------------------- */
+/* Icon bar — notification bell, hamburger, account avatar                 */
+/* ---------------------------------------------------------------------- */
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--navy);
+    cursor: pointer;
+    padding: 7px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+}
+.icon-btn { transition: background .12s ease, color .12s ease; }
+.icon-btn:hover,
+.icon-btn:focus-visible { background: var(--maroon); color: #fff; }
+/* The unread dot is the same red family as the hover, so keep it readable
+   on top of it with a white ring. */
+.icon-btn:hover .badge-dot,
+.icon-btn:hover .badge-count { border-color: #fff; }
+.avatar-btn:hover,
+.avatar-btn:focus-visible { background: var(--maroon); box-shadow: 0 0 0 3px var(--maroon); }
+/* Inside the (still navy) sliding side menu, its close button needs light text. */
+.side-menu-head .icon-btn { color: #fff; }
+.side-menu-head .icon-btn:hover { background: var(--maroon); }
+
+.header-icons { display: flex; align-items: center; gap: 4px; }
+
+.icon-badge { position: absolute; top: -2px; right: -2px; margin: 0; font-size: 0.62rem; padding: 1px 5px; }
+
+.avatar-btn { padding: 0; border-radius: 50%; }
+.avatar-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-dropdown { position: relative; }
+.dropdown-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #fff;
+    color: var(--ink);
+    width: 300px;
+    max-width: 86vw;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: 0 14px 32px rgba(12, 26, 46, 0.2);
+    padding: 8px;
+    display: none;
+    flex-direction: column;
+    z-index: 60;
+}
+.dropdown-panel.open { display: flex; }
+/* The list scrolls on its own so the footer ("See all messages") always
+   stays put below it, visible, instead of the whole panel growing. The
+   scrollbar is hidden on purpose — scrolling still works, there's just no
+   visible track/thumb cluttering a small dropdown. */
+#notif-list {
+    max-height: 340px;
+    overflow-y: auto;
+    scrollbar-width: none;       /* Firefox */
+    -ms-overflow-style: none;    /* old Edge */
+}
+#notif-list::-webkit-scrollbar { display: none; } /* Chrome, Safari */
+.dropdown-panel h4 { margin: 4px 8px 8px; font-size: 0.95rem; }
+.dropdown-panel a { color: var(--ink); padding: 9px 10px; border-radius: var(--radius-sm); display: block; }
+.dropdown-panel a { transition: background .12s ease, color .12s ease; }
+/* Same maroon-with-white-text hover as the nav bar buttons, so the row under
+   the cursor is unmistakable (the old pale beige barely showed on white). */
+.dropdown-panel a:hover,
+.dropdown-panel a:focus-visible { background: var(--maroon); color: #fff; text-decoration: none; }
+.notif-item strong { font-size: 0.85rem; }
+.notif-item p { margin: 2px 0 0; font-size: 0.8rem; color: var(--muted); transition: color .12s ease; }
+.notif-item:hover p,
+.notif-item:focus-visible p { color: rgba(255, 255, 255, 0.85); }
+.dropdown-empty { padding: 10px 10px; color: var(--muted); font-size: 0.85rem; margin: 0; }
+.dropdown-footer-link { text-align: center; font-size: 0.82rem; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 10px !important; }
+.dropdown-user-name { padding: 8px 10px; font-weight: 600; margin: 0 0 4px; border-bottom: 1px solid var(--border); color: var(--navy); }
+
+/* ---------------------------------------------------------------------- */
+/* Sliding side menu                                                       */
+/* ---------------------------------------------------------------------- */
+.side-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 18, 30, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+    z-index: 70;
+}
+.side-overlay.open { opacity: 1; pointer-events: auto; }
+
+.side-menu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 270px;
+    max-width: 82vw;
+    background: var(--navy);
+    color: #fff;
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0s linear 0.2s;
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0 20px;
+    overflow-y: auto;
+}
+.side-menu.open { transform: translateX(0); visibility: visible; transition: transform 0.2s ease, visibility 0s; box-shadow: -8px 0 28px rgba(12, 26, 46, 0.25); }
+.side-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 10px 14px 20px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    margin-bottom: 6px;
+}
+/* Name (big) and email (small) on the left, close button on the right. The
+   close button is a fixed 40x40 circle that can't be squeezed by a long
+   name, which is what made it oblong before. */
+.side-menu-head { align-items: flex-start; gap: 10px; }
+.side-menu-user { min-width: 0; flex: 1 1 auto; padding-top: 4px; }
+.side-menu-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.side-menu-email {
+    margin-top: 3px;
+    font-family: var(--font-body, Inter, system-ui, sans-serif);
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #9fb0c8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.side-menu-head .icon-btn {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    padding: 0;
+    border-radius: 50%;
+}
+/* Logout sits at the bottom of the menu (the menu is a flex column). */
+.side-menu a.side-menu-logout {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.side-menu a { color: #dfe4ee; padding: 13px 20px; font-weight: 500; font-size: 0.95rem; }
+.side-menu a:hover { background: var(--maroon); text-decoration: none; color: #fff; }
+.side-menu-divider {
+    padding: 16px 20px 6px;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #9fb0c8;
+}
+
+main.container { padding-top: 28px; padding-bottom: 64px; min-height: 60vh; }
+
+/* ---------------------------------------------------------------------- */
+/* Flash messages                                                         */
+/* ---------------------------------------------------------------------- */
+.flash {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+    font-size: 0.92rem;
+    border-left: 3px solid transparent;
+}
+.flash-success { background: var(--success-tint); color: var(--success); border-left-color: var(--success); }
+.flash-error   { background: var(--error-tint);   color: var(--error);   border-left-color: var(--error); }
+.flash-info    { background: var(--info-tint);    color: var(--info);    border-left-color: var(--info); }
+
+/* ---------------------------------------------------------------------- */
+/* Forms                                                                   */
+/* ---------------------------------------------------------------------- */
+.form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--maroon);
+    border-radius: var(--radius);
+    padding: 28px;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.form-card label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--navy);
+}
+input, select, textarea, button {
+    font-family: inherit;
+    font-size: 0.98rem;
+}
+input[type="text"], input[type="email"], input[type="password"],
+input[type="date"], input[type="file"], select, textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--ink);
+    transition: border-color .12s ease;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--maroon);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--maroon-tint);
+}
+textarea { resize: vertical; }
+
+button, .btn {
+    display: inline-block;
+    background: var(--maroon);
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    text-align: center;
+    transition: background .12s ease;
+}
+button:hover, .btn:hover { background: var(--maroon-dark); color: #fff; text-decoration: none; }
+
+.btn-secondary {
+    background: transparent;
+    color: var(--maroon);
+    border: 1px solid var(--maroon);
+}
+.btn-secondary:hover { background: var(--maroon-tint); color: var(--maroon-dark); }
+
+.btn-danger {
+    background: var(--error-tint);
+    color: var(--error);
+    border: 1px solid var(--error);
+}
+.btn-danger:hover { background: var(--error); color: #fff; }
+
+/* ---------------------------------------------------------------------- */
+/* Admin report table: search bar + checkbox bulk-selection (reports.php)  */
+/* ---------------------------------------------------------------------- */
+.table-toolbar {
+    margin: 14px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+.table-toolbar .report-search { flex: 1 1 260px; max-width: none; width: auto; }
+.report-filter {
+    width: auto;
+    min-width: 130px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    font: inherit;
+    color: var(--ink);
+}
+/* "Clear filters": same shape as the filter dropdowns, in red. Always there,
+   but greyed out and unclickable until a search or filter is actually set. */
+.report-filter-clear {
+    padding: 10px 14px;
+    border: 1px solid var(--error);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--error);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+}
+.report-filter-clear:hover:not(:disabled),
+.report-filter-clear:focus-visible:not(:disabled) { background: var(--error); color: #fff; }
+.report-filter-clear:disabled { opacity: 0.45; cursor: not-allowed; }
+.report-search {
+    width: 100%;
+    max-width: 420px;
+    padding: 10px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: #fff;
+}
+.select-col { width: 1px; white-space: nowrap; }
+.select-col input[type="checkbox"] { width: 17px; height: 17px; cursor: pointer; }
+
+/* Click a column header to sort by it (see js/main.js); the arrow only
+   appears on whichever column is currently sorted. */
+.sortable-th { cursor: pointer; user-select: none; position: relative; }
+.sortable-th:hover { color: var(--maroon); }
+.sortable-th::after { content: ''; margin-left: 5px; opacity: 0.35; }
+.sortable-th.sort-asc::after  { content: '▲'; opacity: 1; font-size: 0.7em; }
+.sortable-th.sort-desc::after { content: '▼'; opacity: 1; font-size: 0.7em; }
+
+/* Hidden until at least one row is checked (see js/main.js); sits directly
+   above the table it controls, inside the same <form> as the checkboxes
+   so its buttons can submit that form with report_ids[] already in it. */
+/* The bulk-actions bar only exists while something is checked (js/main.js),
+   and floats at the bottom of the screen, clear of the edges, so it's in
+   reach however far down a long table you've scrolled. */
+.bulk-actions-bar {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    width: min(680px, calc(100% - 32px));
+    z-index: 65;   /* above the page and the header (60), but BELOW the side-menu overlay (70) and menu (80): opening the burger menu darkens it with everything else */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    margin: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(20, 22, 26, 0.28);
+    animation: bulk-bar-in 0.18s ease;
+}
+.bulk-actions-bar[hidden] { display: none; }
+@keyframes bulk-bar-in {
+    from { opacity: 0; transform: translate(-50%, 12px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+/* Room at the bottom of the page so the floating bar never covers the last rows. */
+body.bulk-bar-open { padding-bottom: 96px; }
+/* The default .btn-secondary hover (a pale tint) is nearly invisible on the
+   bar's white background, so the bar's buttons get a solid hover. */
+.bulk-actions-bar .btn-secondary { transition: background .12s ease, color .12s ease, border-color .12s ease; }
+.bulk-actions-bar .btn-secondary:hover,
+.bulk-actions-bar .btn-secondary:focus-visible { background: var(--maroon); border-color: var(--maroon); color: #fff; }
+.bulk-actions-bar #bulk-selected-count { font-weight: 600; color: var(--maroon-dark); }
+.bulk-actions-bar-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.bulk-actions-bar-buttons .btn { padding: 8px 14px; font-size: 0.85rem; }
+.bulk-actions-bar-buttons .btn svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
+
+/* A row hidden by the search box (js/main.js) is also unchecked at the
+   same time, so "select all" and the bulk bar only ever act on what's
+   actually visible on screen. */
+#report-table tr[hidden] { display: none; }
+.no-match-row td { text-align: center; color: var(--muted); padding: 22px 12px; white-space: normal; }
+
+.link-btn {
+    background: none;
+    border: none;
+    color: var(--maroon);
+    padding: 0;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.9rem;
+}
+.inline-form { display: inline; }
+
+/* ---------------------------------------------------------------------- */
+/* Row action icon buttons (Edit / Delete / Restore)                      */
+/* ---------------------------------------------------------------------- */
+.row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+/* Big, background-free icons with a drop shadow for contrast: the old 16px
+   icons on a 32px circle were hard to read and hard to hit. The explicit
+   `background: transparent` on every state matters: the global
+   `button:hover` rule would otherwise paint a maroon square on hover. */
+.icon-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    transition: color .12s ease, transform .12s ease;
+}
+/* A very slight grow on hover. */
+.icon-action-btn:hover:not(:disabled) { transform: scale(1.08); }
+.icon-action-btn:hover,
+.icon-action-btn:focus,
+.icon-action-btn:active { background: transparent; text-decoration: none; }
+.icon-action-btn svg {
+    width: 26px;
+    height: 26px;
+    display: block;
+    filter: drop-shadow(0 2px 3px rgba(12, 26, 46, 0.35));
+    transition: filter .12s ease;
+}
+/* The trash SVG has more empty margin inside its own canvas (its drawing fills
+   ~75% of the box, vs ~92% for edit/restore), so at the same size it looks
+   smaller. Give it a bigger box so all three read as the same visual size. */
+.icon-action-btn.icon-delete svg { width: 32px; height: 32px; }
+.icon-action-btn:focus-visible { outline: 2px solid var(--maroon); outline-offset: 1px; }
+/* Black by default; each icon takes its own color on hover (no size change). */
+.icon-action-btn.icon-edit:hover,
+.icon-action-btn.icon-edit:focus-visible    { color: var(--info); }
+.icon-action-btn.icon-delete:hover,
+.icon-action-btn.icon-delete:focus-visible  { color: var(--error); }
+.icon-action-btn.icon-verify:hover,
+.icon-action-btn.icon-verify:focus-visible  { color: var(--success); }
+.icon-action-btn.icon-restore:hover,
+.icon-action-btn.icon-restore:focus-visible { color: var(--success); }
+/* Deleted rows are dimmed/italicized as a whole, but the Restore action
+   needs to stay fully legible and clickable — it's the one live control
+   left in that row. */
+.row-deleted td.row-actions-cell { opacity: 1; font-style: normal; }
+
+/* ---------------------------------------------------------------------- */
+/* Page head                                                               */
+/* ---------------------------------------------------------------------- */
+.page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.page-head h1 { margin: 0; }
+
+/* ---------------------------------------------------------------------- */
+/* Lost / Found toggle (Browse)                                            */
+/* ---------------------------------------------------------------------- */
+.type-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.type-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--card-bg);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+.type-btn:hover { text-decoration: none; border-color: var(--maroon); }
+.type-btn-lost.active { background: var(--maroon); border-color: var(--maroon); color: #fff; }
+.type-btn-found:hover { border-color: var(--info); }
+.type-btn-found.active { background: var(--info); border-color: var(--info); color: #fff; }
+.type-btn.active:not(.type-btn-lost):not(.type-btn-found) {
+    background: var(--ink); border-color: var(--ink); color: #fff;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Filter bar                                                              */
+/* ---------------------------------------------------------------------- */
+.filter-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
+    padding: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.filter-bar input, .filter-bar select {
+    padding: 9px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: #fff;
+}
+.filter-bar input[type="text"] { flex: 1; min-width: 200px; }
+
+/* ---------------------------------------------------------------------- */
+/* Card grid                                                               */
+/* ---------------------------------------------------------------------- */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 20px;
+}
+.item-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    color: var(--ink);
+    display: block;
+    transition: box-shadow .15s ease, border-color .15s ease;
+}
+.item-card:hover {
+    text-decoration: none;
+    border-color: var(--border-strong);
+    box-shadow: 0 6px 18px rgba(20, 37, 66, 0.1);
+}
+.item-thumb { position: relative; aspect-ratio: 4/3; background: #EDEAE1; }
+.item-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.no-image { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); font-size: 0.85rem; }
+.no-image.large { aspect-ratio: 4/3; }
+.no-image-small { width: 64px; height: 64px; flex-shrink: 0; background: #EDEAE1; border-radius: var(--radius-sm); font-size: 0.68rem; text-align: center; }
+.item-detail-image .no-image.large { width: 100%; background: #EDEAE1; border-radius: var(--radius); border: 1px solid var(--border); }
+.item-card { min-width: 0; }
+.item-body { padding: 14px 16px; min-width: 0; }
+/* One line each; anything longer is cut off with an ellipsis (full text is in
+   the tooltip) so long names/locations can't push past the card's edge. */
+.item-body h3 { margin: 0 0 5px; font-size: 1rem; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-body p { margin: 2px 0; font-size: 0.85rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.02em;
+}
+.badge-lost  { background: var(--maroon); }
+.badge-found { background: var(--info); }
+
+.status {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.status-active  { background: var(--gold-tint); color: #7A5B0F; }
+.status-resolved { background: var(--success-tint); color: var(--success); }
+.status-closed  { background: #E9E6DD; color: var(--muted); }
+.status-deleted { background: var(--error-tint); color: var(--error); }
+.row-deleted td { opacity: 0.65; font-style: italic; }
+.row-deleted .status-deleted { font-style: normal; }
+
+/* ---------------------------------------------------------------------- */
+/* Item detail                                                             */
+/* ---------------------------------------------------------------------- */
+.item-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+}
+.item-detail-image img {
+    width: 100%;
+    max-height: 480px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    display: block;
+    border: 1px solid var(--border);
+}
+.item-detail-info h1 { margin-top: 4px; }
+/* The card-grid .badge is positioned absolute against its .item-thumb
+   frame (position: relative) — but the detail page places it beside the
+   title, with no such frame around it, so it was escaping to the nearest
+   positioned ancestor and landing pinned in the page's top-left corner.
+   Here it's just an inline label next to the heading. */
+.item-detail-info .badge {
+    position: static;
+    display: inline-block;
+    margin: 0 0 10px;
+}
+@media (max-width: 720px) {
+    .item-detail { grid-template-columns: 1fr; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Data table                                                              */
+/* ---------------------------------------------------------------------- */
+/* Tables can't reflow on a phone, so they scroll sideways inside this wrapper
+   instead of overflowing the page. */
+.table-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 760px) { .table-scroll > .data-table { min-width: 620px; } }
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.data-table th, .data-table td {
+    text-align: left;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.89rem;
+}
+.data-table th {
+    background: var(--navy);
+    color: #cfd6e3;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+.data-table tr:last-child td { border-bottom: none; }
+/* Long cell text is clipped with an ellipsis instead of stretching the
+   table (the full text is available as a hover tooltip, set in main.js).
+   Cells that hold controls, and the empty-state row, are left alone. */
+.data-table td {
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.data-table .cell-text {
+    display: block;           /* a block with its own width limit: this is what makes the ellipsis reliable inside a table cell */
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.data-table td.row-actions-cell,
+.data-table td.row-actions,
+.data-table td.select-col,
+.data-table td[colspan] {
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+}
+.data-table td[colspan] { white-space: normal; }
+.data-table tbody tr:nth-child(even) td { background: #FAF9F4; }
+.data-table tbody tr:hover td { background: var(--maroon-tint); }
+
+/* ---------------------------------------------------------------------- */
+/* Conversations                                                           */
+/* ---------------------------------------------------------------------- */
+.convo-list { display: flex; flex-direction: column; gap: 8px; }
+.convo-row {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 13px 16px;
+    color: var(--ink);
+    display: block;
+}
+.convo-row:hover { text-decoration: none; border-color: var(--border-strong); background: #FBFAF6; }
+.convo-item {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.85rem;
+    margin-left: 8px;
+    overflow-wrap: anywhere;
+}
+.convo-row-wrap {
+    min-width: 0;
+    max-width: 100%;
+}
+.convo-row-wrap .convo-row,
+.convo-row > div {
+    min-width: 0;
+    max-width: 100%;
+}
+.convo-row-wrap .convo-row { overflow: hidden; }
+.convo-preview {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Messenger (combined conversation list + chat thread)                    */
+/* ---------------------------------------------------------------------- */
+
+/* The messenger page locks itself to exactly one viewport: header + footer
+   stay put and only the two panes (conversation list, message thread)
+   scroll internally. Sending a message reloads this page, and since
+   there's nowhere for the page itself to scroll, there's nothing to "jump
+   back to the top" of — the chat window is right there, already scrolled
+   to the newest message. */
+body.messenger-page {
+    height: 100vh;
+    height: 100dvh;
+    /* Set by js/main.js from window.innerHeight, and kept in sync with the
+       on-screen keyboard via the visualViewport API. 100dvh should track
+       the keyboard on its own, but some mobile browsers don't recompute it
+       reliably through repeated keyboard open/close cycles — exactly what
+       happens while chatting — and the page was visibly shrinking a little
+       more each time. This JS-measured value overrides dvh wherever it's
+       available and doesn't change anything when it isn't. */
+    height: var(--app-100vh, 100dvh);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+body.messenger-page .site-header { flex-shrink: 0; }
+body.messenger-page footer.site-footer { flex-shrink: 0; }
+body.messenger-page main.container {
+    flex: 1 1 auto;
+    min-height: 0;
+    /* .container has margin: 0 auto, and auto margins stop a flex item from
+       stretching — so in this column layout it was shrink-wrapping to its
+       content instead, and a long unbroken string made the whole messenger
+       (and the chatbox) resize. A fixed 100% width (still capped by
+       .container's max-width) keeps it constant. */
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-top: 20px;
+    padding-bottom: 16px;
+}
+body.messenger-page main.container > .flash { flex-shrink: 0; }
+
+.messenger {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    min-width: 0;
+    gap: 20px;
+}
+.messenger-list-pane {
+    width: 340px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+.messenger-list-pane .page-head { flex-shrink: 0; }
+.messenger-list-pane .convo-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    padding-right: 2px;
+}
+.convo-empty { color: var(--muted); font-size: 0.9rem; }
+
+.messenger-thread-pane {
+    /* flex-basis 0 so the pane's width never depends on what's inside it. */
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    /* Reserved here too (not just on .chat-window below) so the pane is
+       exactly as wide whether it's showing the empty state or an open
+       thread — otherwise picking a conversation nudges everything over by
+       a scrollbar's width the moment .chat-window appears. */
+    scrollbar-gutter: stable;
+}
+.thread-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-bottom: 4px;
+}
+.thread-head h2 {
+    margin: 0;
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 1.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.thread-head form { flex-shrink: 0; }
+.thread-head .link-btn { white-space: nowrap; }
+.messenger-thread-pane { min-width: 0; }
+.thread-back { display: none; }
+.thread-item-link { flex-shrink: 0; margin: 0 0 10px; font-size: 0.85rem; }
+
+.messenger-empty {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--muted);
+    text-align: center;
+}
+.messenger-empty svg { opacity: 0.35; }
+
+/* Narrower than this, only one pane shows at a time (list, or the open
+   thread), Messenger-style — with a back arrow in the thread header to
+   return to the list. */
+@media (max-width: 820px) {
+    .messenger[data-has-active="1"] .messenger-list-pane { display: none; }
+    .messenger[data-has-active="0"] .messenger-thread-pane { display: none; }
+    /* The list is the only pane showing here, so let it fill the full width
+       (same as the open chatbox) instead of sitting at its fixed 340px. */
+    .messenger-list-pane { width: 100%; }
+    .messenger-list-pane .convo-list { padding-right: 0; }
+    .messenger-thread-pane {
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        background: transparent;
+    }
+    .thread-back {
+        display: inline-flex;
+        color: var(--maroon);
+        margin-left: -7px;
+    }
+    .thread-back:hover { background: var(--maroon-tint); }
+}
+
+.chat-window {
+    min-width: 0;
+    /* Lets .chat-image size itself against the chat window's width (cqw)
+       without the bubble's own width feeding back into it. */
+    container-type: inline-size;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+.chat-bubble {
+    max-width: 65%;
+    flex-shrink: 0;
+    padding: 8px 28px 8px 12px;
+    border-radius: var(--radius);
+    background: #EDEAE1;
+    align-self: flex-start;
+    position: relative;
+    overflow-wrap: anywhere;
+    /* Nothing inside a bubble may ever spill past its edge. */
+    overflow: hidden;
+    min-width: 0;
+}
+.chat-bubble.mine { align-self: flex-end; background: var(--maroon); color: #fff; }
+.chat-bubble .chat-sender { display: block; font-size: 0.72rem; font-weight: 700; opacity: 0.75; }
+/* pre-wrap (not just nl2br on the server) because a message appended live
+   via the SSE stream carries raw "\n" characters, not <br> tags — without
+   this a multi-line message (the system's possible-match list, in
+   particular) would collapse onto one line until the next full page load. */
+.chat-bubble p { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.chat-bubble .chat-time { display: block; font-size: 0.68rem; opacity: 0.6; text-align: right; }
+/* Match-likelihood meter on the system's possible-match messages: a labelled
+   header, a bar and a one-line note on what the number means. The bar color
+   comes from the tier (low/medium/high) using the site's own palette. Only
+   ever appears in "theirs"-style bubbles (system messages are never "mine"),
+   so it's designed against the light bubble background. */
+.match-meter {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(35, 32, 27, 0.14);
+    --match-color: var(--info);
+}
+.match-meter.match-low  { --match-color: var(--gold); }
+.match-meter.match-high { --match-color: var(--success); }
+.match-meter-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.match-meter-head strong { color: var(--ink); font-size: 0.8rem; letter-spacing: 0; text-transform: none; }
+.match-bar {
+    width: 100%;
+    height: 8px;
+    margin-top: 5px;
+    background: rgba(35, 32, 27, 0.12);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.match-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--match-color);
+    transition: width 0.3s ease;
+}
+.chat-bubble .match-meter-note { margin: 5px 0 0; font-size: 0.7rem; line-height: 1.3; color: var(--muted); white-space: normal; }
+.chat-image {
+    /* Capped at 220px, but never wider than the bubble can be (65% of the
+       chat window minus the bubble's 12px + 28px side padding).
+       This used to be min(220px, 100%): a percentage max-width on an image
+       doesn't shrink the bubble around it, so the bubble sized itself to
+       the image's full natural width and stretched to its 65% cap, leaving
+       a big empty gap beside small images. cqw is a real length, so the
+       bubble now hugs the image. The plain 220px line is a fallback for
+       browsers without container query units. */
+    max-width: 220px;
+    max-width: min(220px, calc(65cqw - 40px));
+    max-height: 220px;
+    width: auto;
+    height: auto;
+    object-fit: cover;
+    display: block;
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+    display: block;
+    cursor: zoom-in;
+}
+
+.chat-form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+/* Shown in place of the composer on the read-only System Notification
+   thread — same slot/spacing as .chat-form so the layout doesn't shift
+   between a normal thread and this one. */
+.chat-form-disabled-note {
+    margin: 0;
+    padding: 10px 12px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.88rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+.chat-form input[type="text"] {
+    flex: 1;
+    min-width: 180px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+}
+.chat-form input[type="text"]:disabled {
+    background: var(--bg);
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Admin — tabs, trash, danger action                                      */
+/* ---------------------------------------------------------------------- */
+.tab-bar {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+.tab {
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+.tab:hover { text-decoration: none; color: var(--ink); }
+.tab-active { color: var(--maroon); border-bottom-color: var(--maroon); }
+
+.hint-text { color: var(--muted); font-size: 0.9rem; max-width: 70ch; }
+
+.link-btn-danger { color: var(--error); }
+
+/* ---------------------------------------------------------------------- */
+/* Admin                                                                   */
+/* ---------------------------------------------------------------------- */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 26px;
+}
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--maroon);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.stat-num { font-family: var(--font-display); font-size: 2rem; font-weight: 400; color: var(--navy); }
+.stat-card span:last-child { color: var(--muted); font-size: 0.82rem; }
+.admin-links { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.preview-img {
+    max-width: 180px;
+    border-radius: var(--radius-sm);
+    display: block;
+    margin-top: 4px;
+    border: 1px solid var(--border);
+}
+
+/* ---------------------------------------------------------------------- */
+/* File picker ("+" button for attaching images / choosing a file)         */
+/* ---------------------------------------------------------------------- */
+.file-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.file-picker input[type="file"] {
+    /* Kept in the DOM (and part of the form) but visually replaced by
+       .file-picker-btn plus .file-picker-thumb / .file-picker-filename
+       below. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+/* The same button doubles as remove control once a file is picked (see
+   js/main.js), so there's no separate tiny "x" to miss-click. */
+.file-picker-btn {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px dashed var(--border-strong);
+    background: #fff;
+    color: var(--maroon);
+    font-size: 1.5rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: border-color .12s ease, background .12s ease, color .12s ease, border-radius .22s ease;
+}
+.file-picker-btn:hover {
+    border-color: var(--maroon);
+    background: var(--maroon-tint);
+    color: var(--maroon-dark);
+}
+.file-picker-btn.is-remove {
+    border-style: solid;
+    border-color: var(--maroon);
+    background: var(--maroon);
+    color: #fff;
+    font-size: 1.3rem;
+    /* Rounded square while an image is picked (matches the preview on top
+       of it); eases into a full circle when the picker is hovered. */
+    border-radius: 10px;
+}
+.file-picker-btn.is-remove:hover { background: var(--maroon-dark); border-color: var(--maroon-dark); }
+
+/* Image mode (chat composer, report photo): the picker is a fixed-size
+   42x42 slot no matter what — the preview thumbnail is laid directly on
+   top of the button (not beside it) once a file is chosen, so picking an
+   image never changes the picker's width. It previously sat next to the
+   button instead, quietly widening the whole composer — and with it the
+   fixed-width messenger layout — every time someone attached a photo. */
+.file-picker-image {
+    position: relative;
+    width: 42px;
+    height: 42px;
+}
+.file-picker-image .file-picker-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    transition: opacity .22s ease, border-radius .22s ease;
+}
+/* The remove button (the "×", .file-picker-btn.is-remove) sits directly
+   underneath the thumbnail. On hover (or keyboard focus) the preview's
+   corners animate round into a circle while it fades out, and the maroon
+   "×" button underneath (which rounds into a circle at the same time)
+   takes its place. */
+.file-picker-image:hover .file-picker-thumb,
+.file-picker-image:has(.file-picker-btn:focus-visible) .file-picker-thumb {
+    border-radius: 50%;
+    opacity: 0;
+}
+.file-picker-image:hover .file-picker-btn.is-remove,
+.file-picker-image:has(.file-picker-btn:focus-visible) .file-picker-btn.is-remove {
+    border-radius: 50%;
+}
+.file-picker-thumb {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid var(--border-strong);
+    display: block;
+}
+.file-picker-thumb[hidden] { display: none; }
+
+/* File mode (CSV import, or any non-image upload): the chosen filename
+   shows as a pill beside the button instead of a thumbnail. */
+.file-picker-filename {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--ink);
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 14px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: #fff;
+}
+.file-picker-filename[hidden] { display: none; }
+
+.chat-form .file-picker { order: 2; }
+.chat-form button[type="submit"] { order: 3; }
+.chat-form input[type="text"] { order: 1; }
+
+/* Click-to-enlarge modal for chat images. */
+.image-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 15, 20, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    z-index: 5000; /* above the report popup (3500) and confirm dialogs (4000) */
+}
+.image-modal[hidden] { display: none; }
+.image-modal img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.image-modal-close {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.image-modal-close:hover { background: rgba(255, 255, 255, 0.3); }
+
+/* ---------------------------------------------------------------------- */
+/* Footer                                                                  */
+/* ---------------------------------------------------------------------- */
+.site-footer {
+    border-top: 1px solid var(--border);
+    background: var(--card-bg);
+    padding: 20px 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+    text-align: center;
+}
+
+.badge-count {
+    display: inline-block;
+    background: var(--error);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+.badge-count[hidden] { display: none; }
+.site-header nav a .badge-count { margin-left: 3px; }
+
+/* The bell (System Notification alerts) shows only whether there's
+   something new, not how many — a plain dot rather than a number. */
+.badge-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    background: var(--error);
+    border-radius: 50%;
+    border: 1.5px solid var(--card-bg);
+}
+.badge-dot[hidden] { display: none; }
+/* On the bell: .icon-badge's number-pill padding (1px 5px) was stretching
+   the dot into an oval (box-sizing is border-box, so 5px of side padding
+   each ate the 9px width). No padding + equal width/height = true circle,
+   and it sits against the bell's top-right shoulder instead of floating
+   off the corner of the button. */
+.badge-dot.icon-badge {
+    top: 4px;
+    right: 6px;
+    width: 11px;
+    height: 11px;
+    padding: 0;
+    border-width: 2px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Toasts — brief, non-blocking feedback ("Status updated.", "12 results    */
+/* found") that appears, then dismisses itself.                            */
+/* ---------------------------------------------------------------------- */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 6000; /* above every modal overlay, so toasts show over popups */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: calc(100vw - 40px);
+    width: 340px;
+}
+.toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--navy-dark);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    font-size: 0.9rem;
+    line-height: 1.35;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .18s ease, transform .18s ease;
+    border-left: 4px solid var(--gold);
+}
+.toast.toast-show { opacity: 1; transform: translateY(0); }
+.toast-success { border-left-color: var(--success, #2E7D32); }
+.toast-error   { border-left-color: var(--error); }
+.toast-info    { border-left-color: var(--gold); }
+.toast-message { flex: 1; }
+.toast-close {
+    background: none; border: none; color: #fff; opacity: 0.7;
+    padding: 0; font-size: 1rem; line-height: 1; cursor: pointer;
+}
+.toast-close:hover { opacity: 1; background: none; }
+@media (max-width: 480px) {
+    #toast-container { left: 16px; right: 16px; bottom: 16px; width: auto; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Modals — blocking confirmation (plain confirm, type-to-confirm, and     */
+/* type-your-password variants). One reusable overlay/dialog pair built    */
+/* and reused by js/main.js's Modal.* functions.                           */
+/* ---------------------------------------------------------------------- */
+#modal-overlay, #verify-modal-overlay, #forgot-modal-overlay, #guest-login-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 22, 26, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 4000;
+}
+#modal-overlay[hidden], #verify-modal-overlay[hidden], #forgot-modal-overlay[hidden] { display: none; }
+.modal-dialog {
+    background: var(--card-bg);
+    border-radius: 16px;
+    max-width: 420px;
+    width: 100%;
+    padding: 22px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+.modal-dialog h3 { margin: 0 0 8px; font-size: 1.1rem; }
+.modal-dialog p.modal-message { margin: 0 0 14px; color: var(--muted); font-size: 0.92rem; line-height: 1.5; }
+.modal-dialog input[type="text"],
+.modal-dialog input[type="email"],
+.modal-dialog input[type="password"] {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+}
+.modal-error {
+    color: var(--error);
+    font-size: 0.85rem;
+    margin: -2px 0 10px;
+    min-height: 1.1em;
+}
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 6px;
+}
+.modal-actions .btn { padding: 9px 16px; font-size: 0.88rem; }
+.modal-confirm-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------------------------------------------------------------------- */
+/* Item-view modal — item.php's content, fetched over AJAX (see ItemModal  */
+/* in js/main.js), shown as a popup instead of navigating to a new page.   */
+/* ---------------------------------------------------------------------- */
+#item-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 22, 26, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 3500;
+}
+#item-modal-overlay[hidden] { display: none; }
+.item-modal-dialog {
+    position: relative;
+    background: var(--card-bg);
+    border-radius: 16px;
+    max-width: 880px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 26px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+.item-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    z-index: 2;
+    /* The global `button` rule gives every button 11px/20px padding, which
+       pushed the glyph off-center in this 32px circle. Zero it and center
+       the (SVG) cross with flex. */
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.item-modal-close:hover { background: var(--border); color: var(--ink); }
+.item-modal-dialog .item-detail { margin: 0; }
+
+/* ---- Report details: each detail is its own field. Long values scroll
+        inside their field instead of growing the popup, so the action
+        button (Message Reporter / Edit Report) is always on screen. ---- */
+.item-detail-info { display: flex; flex-direction: column; min-width: 0; }
+.item-detail-head h1 { margin: 8px 0 0; overflow-wrap: anywhere; }
+.item-detail-tags { display: flex; align-items: center; gap: 8px; }
+.item-detail-tags .badge { margin: 0; }
+.item-detail-tags .status { margin-top: 0; }
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    margin-top: 14px;
+}
+.detail-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.detail-field.span-2 { grid-column: 1 / -1; }
+.detail-desc { margin-top: 10px; }
+.detail-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.detail-value {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 11px;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    /* Two lines (plus padding/border), then the field scrolls. */
+    max-height: calc(2 * 1.45em + 18px);
+    overflow-y: auto;
+}
+.detail-none { color: var(--muted); }
+.item-actions { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.item-actions form { margin: 0; }
+
+.item-modal-dialog .item-detail {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 28px;
+    align-items: center;
+}
+.item-modal-dialog .item-detail-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.item-modal-dialog .item-detail-image img {
+    width: auto;
+    max-width: 100%;
+    max-height: min(380px, 60vh);
+    object-fit: contain;
+    margin: 0 auto;
+}
+.item-modal-dialog .no-image { margin: 0 auto; }
+.zoomable { cursor: zoom-in; }
+.item-modal-dialog .item-detail-head { padding-right: 30px; } /* clear of the close button */
+
+@media (max-width: 720px) {
+    .item-modal-dialog { padding: 20px 18px 0; }
+    .item-modal-dialog .item-detail { grid-template-columns: 1fr; gap: 16px; }
+    .item-modal-dialog .item-detail-image img { max-height: 220px; }
+    .item-modal-dialog .item-detail-head { padding-right: 0; }
+    /* If the screen really is too short to fit everything, the popup can
+       still scroll — but the action button stays pinned in view. */
+    .item-modal-dialog .item-actions {
+        position: sticky;
+        bottom: 0;
+        margin: 12px -18px 0;
+        padding: 12px 18px 16px;
+        background: var(--card-bg);
+        border-top: 1px solid var(--border);
+    }
+    /* v15: buttons share the row equally; if they wrap onto separate
+       lines, each one stretches to the same full width. (Grid, because
+       flexbox sizes padded link-buttons unevenly.) */
+    .item-modal-dialog .item-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+    .item-modal-dialog .item-actions form { display: flex; min-width: 0; }
+    .item-modal-dialog .item-actions .btn,
+    .item-modal-dialog .item-actions button { width: 100%; min-width: 0; text-align: center; }
+}
+
+/* ---- Create / edit report popup ---- */
+#report-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 22, 26, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 3500;
+}
+#report-modal-overlay[hidden] { display: none; }
+.report-modal-dialog { max-width: 720px; }
+.modal-form-title { margin: 0 36px 16px 0; font-size: 1.25rem; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-image-row { display: flex; align-items: center; gap: 12px; }
+.form-image-row .preview-img { width: 64px; height: 64px; object-fit: cover; margin: 0; }
+.form-submit button { width: 100%; }
+.report-modal-dialog .form-card {
+    max-width: none;
+    background: none;
+    border: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+    align-items: start;
+}
+.report-modal-dialog .form-card .span-2 { grid-column: 1 / -1; }
+.report-modal-dialog .form-card textarea { resize: none; height: 104px; }
+.report-modal-dialog .form-submit { display: flex; justify-content: flex-end; }
+.report-modal-dialog .form-submit button { width: auto; min-width: 170px; }
+@media (max-width: 600px) {
+    .report-modal-dialog .form-card { grid-template-columns: 1fr; }
+}
+.item-modal-loading, .item-modal-error { padding: 30px; text-align: center; color: var(--muted); }
+
+.convo-row-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.convo-row-wrap .convo-row {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    padding: 13px 16px;
+}
+.convo-row-wrap .convo-row:hover { background: #FBFAF6; }
+/* The System Notification thread is pinned first (get_conversations) and
+   drawn solid blue with white text so it stands apart from people's chats. */
+.convo-row-wrap.convo-system { background: var(--info); border-color: var(--info); color: #fff; }
+.convo-row-wrap.convo-system .convo-row,
+.convo-row-wrap.convo-system .convo-row:hover { background: transparent; color: #fff; }
+.convo-row-wrap.convo-system:hover { background: #17406B; border-color: #17406B; }
+.convo-row-wrap.convo-system strong { color: #fff; }
+.convo-row-wrap.convo-system .convo-preview { color: rgba(255, 255, 255, 0.82); }
+.convo-row-wrap.convo-system .badge-count { background: #fff; color: var(--info); }
+.convo-row-wrap.convo-system.active { background: #12345A; border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.convo-row-wrap.active:not(.convo-system) { border-color: var(--maroon); background: var(--maroon-tint); }
+.convo-row-wrap.active:not(.convo-system) .convo-row,
+.convo-row-wrap.active:not(.convo-system) .convo-row:hover { background: var(--maroon-tint); }
+
+/* "Deleted message" placeholder — shown for a sender's own removed message,
+   and pushed to the other party live via chat polling. */
+.chat-bubble.deleted { opacity: 0.72; }
+.deleted-msg-text { margin: 4px 0; }
+.deleted-msg-text em { font-style: italic; opacity: 0.85; }
+
+.delete-msg-form {
+    display: inline;
+    position: absolute;
+    top: 4px;
+    right: 6px;
+}
+.delete-msg-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    opacity: 0.55;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 2px;
+    cursor: pointer;
+}
+.delete-msg-btn:hover { opacity: 1; }
+
+/* ---------------------------------------------------------------------- */
+/* Responsive                                                              */
+/* ---------------------------------------------------------------------- */
+@media (max-width: 600px) {
+    .header-inner:has(.guest-nav) { flex-direction: column; align-items: flex-start; }
+    .site-header nav a { margin-left: 0; margin-right: 16px; }
+    .brand { font-size: 1rem; }
+    h1 { font-size: 1.5rem; }
+}
+
+/* ---- Long names/titles: truncate with an ellipsis instead of overflowing ---- */
+/* Conversation list: "Name   re: item   (badge)" on one line. */
+.convo-row > div { display: flex; align-items: center; gap: 8px; }
+.convo-row strong {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 65%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.convo-row .convo-item {
+    flex: 1 1 0;
+    min-width: 0;
+    margin-left: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+.convo-row .badge-count { flex: none; margin-left: auto; }
+/* Bell / chat dropdown items. */
+.notif-item strong,
+.notif-item p {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---- Possible-match card (system notification) ---- */
+.match-card { width: 340px; min-width: 230px; max-width: 100%; }
+.match-card-title {
+    margin-bottom: 6px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--info);
+}
+.match-card-pair { margin: 0; display: grid; gap: 3px; }
+.match-card-pair > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.match-card-pair dt { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.match-card-pair dd { margin: 0; min-width: 0; font-size: 0.88rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.match-card .match-meter { margin-top: 8px; padding-top: 8px; }
+.chat-bubble a.match-card-btn,
+.chat-bubble a.match-card-btn:hover {
+    display: block;
+    margin-top: 10px;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    text-align: center;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ---- Side-by-side comparison (item.php?id=..&mine=..) ---- */
+.item-modal-dialog.item-modal-wide { max-width: 1040px; }
+.item-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 6px; }
+.compare-col {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 16px 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+.compare-col-match { border-color: var(--info); }
+.compare-label {
+    margin: 0 0 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.compare-label-match { color: var(--info); }
+.item-modal-dialog .item-detail.item-detail-stack { display: flex; flex-direction: column; gap: 12px; align-items: stretch; flex: 1 1 auto; }
+.item-detail-stack .item-detail-info { flex: 1 1 auto; }
+.item-detail-stack .item-detail-image img { max-height: 150px; }
+.item-detail-stack .item-detail-head { padding-right: 0; }
+.item-detail-stack .item-detail-head h1 {
+    font-size: 1.15rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.item-detail-stack .item-actions { margin-top: auto; padding-top: 14px; }
+@media (max-width: 720px) {
+    .item-compare { grid-template-columns: 1fr; }
+    .item-compare .item-actions { position: static; margin: 0; padding: 12px 0 0; border: 0; background: none; }
+}
+
+/* ---- Date Reported column (report tables) ---- */
+.date-close { display: block; margin-top: 1px; font-size: 0.7rem; line-height: 1.2; color: var(--muted); }
+
+/* ---- Admin-edit card (system notification): same rows/type as the match card ---- */
+.admin-edit-card .match-card-pair dd { white-space: normal; overflow-wrap: anywhere; }
+
+/* ---- School email field: [ name | @holychild.edu.ph ] ---- */
+.email-field {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    overflow: hidden;
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+.email-field:focus-within { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-tint); }
+.email-field input[type="text"],
+.email-field input[type="text"]:focus {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+}
+.email-suffix {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border-left: 1px solid var(--border-strong);
+    background: #F4F2EA;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    user-select: none;
+    cursor: default;
+}
+
+/* ---- Verification code: six single-digit boxes ---- */
+.code-boxes { display: flex; width: 100%; gap: 12px; }
+.code-boxes input.code-box[type="text"] {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    height: 58px;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--navy);
+    caret-color: var(--maroon);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    background: #fff;
+}
+.code-boxes input.code-box[type="text"].filled { border-color: var(--navy); background: #FAF9F4; }
+.code-boxes input.code-box[type="text"]:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-tint); }
+
+/* ---- Spacing for labelled fields inside the verify / forgot-password popups ---- */
+.modal-dialog label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 0 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--navy);
+}
+.modal-dialog label input[type="text"],
+.modal-dialog label input[type="email"],
+.modal-dialog label input[type="password"] { margin-bottom: 0; }
+.modal-dialog .modal-error { margin: -6px 0 12px; }
+
+/* ---- Import-reports popup is small: no need for the full report-form width ---- */
+.report-modal-dialog:has(.import-form) { max-width: 520px; }
+.import-form .file-picker { justify-self: start; }
+
+/* ---- Search + filter bars fill the whole row (no empty gap on the right) ---- */
+.table-toolbar .report-search { flex: 1 1 260px; max-width: none; width: auto; }
+.table-toolbar .report-filter, .table-toolbar .report-filter-clear { flex: 0 0 auto; }
+
+/* ---- "Admin" tag in the header, shown only on the admin account ---- */
+.admin-tag {
+    margin-right: 10px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--info-tint);
+    color: var(--info);
+    border: 1px solid var(--info);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* ---- Export popup: two on/off switches ---- */
+.report-modal-dialog:has(.export-form) { max-width: 460px; }
+.report-modal-dialog .export-form { grid-template-columns: 1fr; }
+.report-modal-dialog .export-form .toggle-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    cursor: pointer;
+}
+.export-form .toggle-row small { display: block; margin-top: 2px; color: var(--muted); font-weight: 400; }
+.export-form .switch {
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    flex-shrink: 0;
+    width: 40px;
+    height: 22px;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--border-strong);
+    cursor: pointer;
+    transition: background .15s ease;
+}
+.export-form .switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform .15s ease;
+}
+.export-form .switch:checked { background: var(--info); }
+.export-form .switch:checked::after { transform: translateX(18px); }
+.export-form .switch:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; box-shadow: none; }
+
+/* ---- CSV import picker: the remove "x" is a circle, long file names are cut with an ellipsis ---- */
+.file-picker:not(.file-picker-image) .file-picker-btn.is-remove { border-radius: 50%; }
+.file-picker:not(.file-picker-image) { min-width: 0; max-width: 100%; }
+.file-picker-filename {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 0;
+    line-height: 40px;
+}
+
+/* ---- Edit Report and Message Reporter buttons are exactly the same size ---- */
+.item-actions .btn,
+.item-actions button {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 20px;
+    line-height: 1;
+    border: 1px solid var(--maroon);
+}
+
+/* ---- Table action buttons (edit / delete / restore / verify / ask): round, with a border that is always
+   transparent — on hover the icon takes its colour and the circle gets a soft tinted fill (no outline, no halo). ---- */
+.icon-action-btn {
+    width: 38px;
+    height: 38px;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    color: var(--muted);
+    transition: color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.icon-action-btn:hover:not(:disabled) { transform: none; }
+.icon-action-btn svg { width: 22px; height: 22px; filter: none; }
+.icon-action-btn.icon-delete svg { width: 26px; height: 26px; }
+.icon-action-btn.icon-edit:hover,
+.icon-action-btn.icon-edit:focus-visible {
+    color: var(--info);
+    background: color-mix(in srgb, var(--info) 14%, transparent);
+    border-color: transparent;
+    outline: none;
+}
+.icon-action-btn.icon-delete:hover,
+.icon-action-btn.icon-delete:focus-visible {
+    color: var(--error);
+    background: color-mix(in srgb, var(--error) 14%, transparent);
+    border-color: transparent;
+    outline: none;
+}
+.icon-action-btn.icon-restore:hover,
+.icon-action-btn.icon-restore:focus-visible,
+.icon-action-btn.icon-verify:hover,
+.icon-action-btn.icon-verify:focus-visible {
+    color: var(--success);
+    background: color-mix(in srgb, var(--success) 14%, transparent);
+    border-color: transparent;
+    outline: none;
+}
+
+/* The "Ask if resolved" (mail) button is plain like the others until hovered, then turns yellow-orange. */
+.icon-action-btn.icon-ask:hover:not(:disabled),
+.icon-action-btn.icon-ask:focus-visible {
+    color: #E08A00;
+    background: color-mix(in srgb, #E08A00 16%, transparent);
+    border-color: transparent;
+    outline: none;
+}
+
+/* ---- Hover effect on conversations in the list ---- */
+.convo-row-wrap { transition: background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.convo-row-wrap:not(.convo-system):not(.convo-inquiry):not(.active):hover {
+    background: #F1EEE6;
+    border-color: var(--border-strong);
+    box-shadow: 0 2px 8px rgba(20, 37, 66, 0.08);
+}
+.convo-row-wrap:not(.convo-system):not(.convo-inquiry):not(.active) .convo-row:hover { background: transparent; }
+.convo-row-wrap.convo-system:hover { box-shadow: 0 2px 8px rgba(12, 26, 46, 0.25); }
+
+/* ---- Muted "Awaiting admin review" rows (deleted, can't be restored by the user) ---- */
+.row-deleted td.row-actions-cell.awaiting-review { opacity: 0.65; font-style: italic; color: var(--muted); }
+
+/* ---- "Contact Admin" general-inquiry conversation: red so it stands out (not pinned) ---- */
+.convo-row-wrap.convo-inquiry { background: var(--error); border-color: var(--error); color: #fff; }
+.convo-row-wrap.convo-inquiry:hover { background: #8B2018; border-color: #8B2018; box-shadow: 0 2px 8px rgba(139, 32, 24, 0.35); }
+.convo-row-wrap.convo-inquiry .convo-row,
+.convo-row-wrap.convo-inquiry .convo-row:hover { background: transparent; color: #fff; }
+.convo-row-wrap.convo-inquiry .convo-row strong { color: #fff; }
+.convo-row-wrap.convo-inquiry .convo-item,
+.convo-row-wrap.convo-inquiry .convo-preview,
+.convo-row-wrap.convo-inquiry .convo-time { color: rgba(255, 255, 255, 0.85); }
+.convo-row-wrap.convo-inquiry .badge-count { background: #fff; color: var(--error); }
+.convo-row-wrap.convo-inquiry.active { background: #7E1C14; border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.convo-row-wrap.convo-inquiry.active .convo-row,
+.convo-row-wrap.convo-inquiry.active .convo-row:hover { background: transparent; }
+.convo-row-wrap.convo-inquiry .kebab-btn { color: rgba(255, 255, 255, 0.9); }
+.convo-row-wrap.convo-system .kebab-btn { color: rgba(255, 255, 255, 0.9); }
+.convo-row-wrap.convo-inquiry .kebab-btn:hover,
+.convo-row-wrap.convo-inquiry .kebab-btn:focus-visible,
+.convo-row-wrap.convo-inquiry .kebab-btn[aria-expanded="true"] {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+    border-color: #fff;
+    outline: none;
+}
+
+/* ---- Contact Admin button: compact, so the list starts at the same height for users and admins ---- */
+.messenger-list-pane .page-head { flex-wrap: nowrap; min-height: 38px; }
+.messenger-list-pane .page-head .btn {
+    padding: 7px 14px;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+/* ---- System notification messages fit on small screens ---- */
+@media (max-width: 820px) {
+    .chat-bubble { max-width: 88%; }
+    .chat-bubble.theirs { padding-right: 12px; }
+    .chat-bubble:has(.match-card) { max-width: 100%; width: 100%; }
+    .match-card { width: 100%; min-width: 0; }
+    .match-card-pair > div { grid-template-columns: 64px minmax(0, 1fr); }
+    .match-card-pair dd { white-space: normal; overflow-wrap: anywhere; }
+}
+
+/* ---- Toast: shake when the same message is triggered again ---- */
+@keyframes toast-shake {
+    0%, 100% { translate: 0 0; }
+    18% { translate: -9px 0; }
+    36% { translate: 8px 0; }
+    54% { translate: -6px 0; }
+    72% { translate: 4px 0; }
+}
+.toast.toast-shake { animation: toast-shake 0.42s ease; }
+
+/* ---- Popups fade in and rise a little ---- */
+@keyframes popup-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popup-dialog-in {
+    from { opacity: 0; transform: translateY(18px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+#modal-overlay:not([hidden]),
+#verify-modal-overlay:not([hidden]),
+#forgot-modal-overlay:not([hidden]),
+#item-modal-overlay:not([hidden]),
+#report-modal-overlay:not([hidden]) { animation: popup-overlay-in 0.18s ease both; }
+#modal-overlay:not([hidden]) .modal-dialog,
+#verify-modal-overlay:not([hidden]) .modal-dialog,
+#forgot-modal-overlay:not([hidden]) .modal-dialog,
+#item-modal-overlay:not([hidden]) .item-modal-dialog { animation: popup-dialog-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+    #modal-overlay, #verify-modal-overlay, #forgot-modal-overlay, #item-modal-overlay, #report-modal-overlay,
+    .modal-dialog, .item-modal-dialog, .toast.toast-shake { animation: none !important; }
+}
+
+/* ---- Browse: one All / Lost / Found dropdown on the search line (fixed width, so nothing shifts) ---- */
+.filter-bar { align-items: center; margin-bottom: 22px; }
+.type-dropdown { position: relative; flex: 0 0 auto; }
+.type-dropdown-btn {
+    width: 150px;
+    justify-content: space-between;
+    padding: 9px 14px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+.type-dropdown-btn svg { flex-shrink: 0; transition: transform .15s ease; }
+.type-dropdown-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+.type-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 40;
+    min-width: 100%;
+    padding: 6px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 10px 28px rgba(20, 37, 66, 0.16);
+    animation: popup-dialog-in 0.16s ease both;
+}
+.type-dropdown-menu[hidden] { display: none; }
+.type-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.type-option::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); flex-shrink: 0; }
+.type-option-lost::before { background: var(--maroon); }
+.type-option-found::before { background: var(--info); }
+.type-option:hover { background: var(--bg); text-decoration: none; }
+.type-option.selected { background: var(--bg); box-shadow: inset 0 0 0 1px var(--border-strong); }
+
+/* ---- Search bar + filters follow you down the page (Browse, Manage Reports, My Reports) ---- */
+.filter-bar {
+    position: sticky;
+    top: 10px;
+    z-index: 30;
+    box-shadow: 0 6px 16px rgba(20, 37, 66, 0.07);
+}
+.table-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin: 6px 0 12px;
+    padding: 10px 0;
+    background: var(--bg);
+}
+
+/* ---- "View item details" as a rounded button on the chat title line ---- */
+.thread-item-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border: 1px solid var(--maroon);
+    border-radius: 999px;
+    color: var(--maroon);
+    background: transparent;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background .12s ease, color .12s ease;
+}
+.thread-item-btn:hover { background: var(--maroon); color: #fff; text-decoration: none; }
+
+/* ---- Sticky navigation bar; sticky search/filter bars sit just below it ---- */
+.site-header { position: sticky; top: 0; z-index: 60; }
+:root { --sticky-top: calc(var(--header-h, 72px) + 10px); }
+
+/* ---- One look for every search + filter container (Browse, Manage Reports, Manage Users, My Reports) ---- */
+.filter-bar,
+.table-toolbar {
+    position: sticky;
+    top: var(--sticky-top);
+    z-index: 30;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 20px;
+    padding: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 16px rgba(20, 37, 66, 0.07);
+}
+.filter-bar input[type="text"],
+.filter-bar select,
+.filter-bar .report-filter-clear,
+.table-toolbar .report-search,
+.table-toolbar .report-filter,
+.table-toolbar .report-filter-clear,
+.type-dropdown-btn {
+    box-sizing: border-box;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 0.9rem;
+}
+.type-dropdown-btn { padding: 0 14px; }
+.filter-bar select, .table-toolbar .report-filter { min-width: 130px; }
+@media (max-width: 720px) {
+    /* On phones the bar wraps into several rows — too tall to keep pinned. */
+    .filter-bar, .table-toolbar { position: static; }
+}
+
+/* ---- Search box with an x at the end (added by js/main.js) ---- */
+.search-field { position: relative; flex: 1 1 260px; min-width: 200px; }
+.search-field.search-field > input {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    flex: none;
+    box-sizing: border-box;
+    padding-right: 34px;
+}
+.search-field input::-webkit-search-cancel-button,
+.search-field input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
+.search-field input::-ms-clear { display: none; }
+.search-clear,
+.search-clear:hover,
+.search-clear:focus {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    color: var(--ink);   /* same colour as the text in the search box */
+    cursor: pointer;
+}
+.search-clear[hidden] { display: none; }
+.search-clear:focus-visible { outline: 2px solid var(--info); outline-offset: 1px; }
+
+/* ---- Manage Users: "Online now" ---- */
+.online-now { display: inline-flex; align-items: center; gap: 6px; color: var(--success); font-weight: 600; }
+.online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+
+/* ---- Conversation list: "re: item" sits on its own line under the person's name ---- */
+.convo-row > div { flex-wrap: wrap; row-gap: 2px; }
+.convo-row strong { order: 1; }
+.convo-row .badge-count { order: 2; }
+.convo-row .convo-item { order: 3; flex: 1 1 100%; }
+
+/* ---- Chat bubbles: the same padding on every side ---- */
+.chat-bubble,
+.chat-bubble.theirs,
+.chat-bubble.mine { padding: 10px 14px; }
+.chat-bubble > :first-child { margin-top: 0; }
+.chat-bubble > :last-child { margin-bottom: 0; }
+/* The delete "x" no longer reserves a strip of padding: it floats over the corner on hover. */
+.delete-msg-btn { opacity: 0; }
+.chat-bubble:hover .delete-msg-btn, .delete-msg-btn:focus-visible { opacity: 0.7; }
+.chat-bubble:hover .delete-msg-btn:hover { opacity: 1; }
+@media (hover: none) { .delete-msg-btn { opacity: 0.55; } }
+
+/* ---- Status colours: the same in every table (dropdowns and tags), and the tag is as big as the dropdown ---- */
+.data-table select.status-select,
+.data-table td .status {
+    box-sizing: border-box;
+    height: 30px;
+    padding: 0 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+}
+.data-table td .status { display: inline-flex; align-items: center; margin-top: 0; }
+.data-table select.status-select { padding-right: 4px; }
+.data-table select.status-select-active, .data-table td .status-active { background-color: var(--gold-tint); color: #7A5B0F; border-color: #D9B454; }
+.data-table select.status-select-resolved, .data-table td .status-resolved { background-color: var(--success-tint); color: var(--success); border-color: var(--success); }
+.data-table select.status-select-closed,  .data-table td .status-closed  { background-color: #E9E6DD; color: var(--muted); border-color: #CFCABB; }
+.data-table td .status-deleted { background-color: var(--error-tint); color: var(--error); border-color: var(--error); }
+.date-close-spacer { visibility: hidden; }
+
+/* ---- Manage Users: date filter ---- */
+.date-filter { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+.table-toolbar .date-filter input[type="date"] { box-sizing: border-box; height: 40px; padding: 0 10px; font-size: 0.9rem; }
+
+/* ---- Active / Deleted Reports switch (same dropdown as Browse's All / Lost / Found) ---- */
+.view-dropdown .type-dropdown-btn { width: 170px; }
+.type-btn.active.view-btn-active:not(.type-btn-lost):not(.type-btn-found) { background: var(--success); border-color: var(--success); color: #fff; }
+.type-btn.active.view-btn-trash:not(.type-btn-lost):not(.type-btn-found)  { background: var(--error); border-color: var(--error); color: #fff; }
+.type-option-view-active::before { background: var(--success); }
+.type-option-view-trash::before  { background: var(--error); }
+
+/* ---- Green dot: that person is online right now (conversation list) ---- */
+.convo-online {
+    flex: none;
+    order: 0;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #2FB457;
+    box-shadow: 0 0 0 2px var(--card-bg);
+}
+.convo-row-wrap.convo-system .convo-online, .convo-row-wrap.convo-inquiry .convo-online { box-shadow: 0 0 0 2px #fff; }
+
+/* ---- Manage Users: "On or before / On or after" toggle + date ---- */
+.date-filter { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.date-mode-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    height: 40px;
+    padding: 0 12px;
+    background: var(--card-bg);
+    color: var(--ink);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.date-mode-btn:hover { background: var(--bg); color: var(--ink); border-color: var(--maroon); }
+
+/* ---- Search bars: every control has a fixed width, so nothing moves when a state changes ---- */
+.table-toolbar .report-filter[data-filter="type"]     { flex: 0 0 130px; width: 130px; min-width: 0; }
+.table-toolbar .report-filter[data-filter="category"] { flex: 0 0 170px; width: 170px; min-width: 0; }
+.table-toolbar .report-filter[data-filter="status"]   { flex: 0 0 140px; width: 140px; min-width: 0; }
+.table-toolbar .report-filter[data-filter="role"]     { flex: 0 0 130px; width: 130px; min-width: 0; }
+.table-toolbar .report-filter[data-filter="verified"] { flex: 0 0 150px; width: 150px; min-width: 0; }
+.filter-bar select[name="category"] { flex: 0 0 170px; width: 170px; min-width: 0; }
+.filter-bar select[name="status"]   { flex: 0 0 140px; width: 140px; min-width: 0; }
+.filter-bar .report-filter-clear,
+.table-toolbar .report-filter-clear { flex: 0 0 120px; width: 120px; padding: 0; text-align: center; white-space: nowrap; }
+.type-dropdown, .view-dropdown { flex: 0 0 auto; }
+
+/* ---- Manage Users: "Active/Joined before/after" dropdown joined to its date ---- */
+.date-filter { display: inline-flex; align-items: stretch; gap: 0; flex: 0 0 auto; }
+.date-mode-dropdown { position: relative; flex: 0 0 auto; }
+.date-mode-btn {
+    justify-content: space-between;
+    width: 150px;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    background: var(--bg);
+}
+.table-toolbar .date-filter input[type="date"] {
+    flex: 0 0 150px;
+    width: 150px;
+    margin-left: -1px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.date-mode-option { cursor: pointer; }
+
+/* ---- Manage Reports / Manage Users headers: same height, so the content below never shifts between the two ---- */
+.page-head-admin { min-height: 38px; }
+.page-head-admin .btn {
+    padding: 7px 14px;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+/* ---- Desktop: tables fit their row — no sideways scrolling. Text wraps; the action buttons never get squeezed. ---- */
+@media (min-width: 900px) {
+    .table-scroll { overflow-x: visible; }
+    .data-table th, .data-table td {
+        padding: 10px 9px;
+        max-width: none;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        overflow-wrap: anywhere;
+    }
+    .data-table td.row-actions-cell, .data-table th.actions-th { white-space: nowrap; width: 1%; overflow-wrap: normal; }
+    .data-table .row-actions { flex-wrap: nowrap; }
+    .data-table select.status-select { max-width: 100%; }
+}
+
+/* ---- Compare reports opened as a full page (the link in the email): same stacked layout as inside the popup ---- */
+.item-compare .item-detail.item-detail-stack { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+.item-compare .item-detail-image { display: flex; align-items: center; justify-content: center; }
+.item-compare .item-detail-image img { width: auto; max-width: 100%; max-height: 180px; object-fit: contain; margin: 0 auto; }
+.item-compare .item-detail-head { padding-right: 0; }
+
+/* ---- Notification cards: action buttons side by side ---- */
+.match-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.match-card-actions .match-card-btn { margin-top: 0; flex: 1 1 auto; text-align: center; }
+.match-card-done { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--success-tint); color: var(--success); font-weight: 600; font-size: 0.88rem; }
+.notice-action.is-done { background: var(--success-tint); color: var(--success); border: 1px solid var(--success); pointer-events: none; }
+.notice-action:disabled { opacity: 0.8; cursor: default; }
+
+/* ---- Manage Reports: envelope button (clearer, slightly larger) and its cooling-down state ---- */
+.icon-action-btn.icon-ask svg { width: 24px; height: 24px; }
+.icon-action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.icon-action-btn:disabled:hover { background: transparent; box-shadow: none; border-color: transparent; color: var(--muted); }
+
+/* ---- A row that a live refresh just changed or added ---- */
+@keyframes row-updated-flash { from { background: rgba(28, 75, 124, 0.18); } to { background: transparent; } }
+.data-table tr.row-updated td { animation: row-updated-flash 2s ease-out; }
+
+/* ---- Three-dot menu (conversation list rows and the chat title bar) ---- */
+.kebab-btn {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-right: 10px;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.kebab-btn:hover, .kebab-btn:focus-visible, .kebab-btn[aria-expanded="true"] {
+    color: var(--info);
+    background: color-mix(in srgb, var(--info) 12%, transparent);
+    outline: none;
+}
+.thread-head .kebab-btn { margin: 0 0 0 auto; }
+
+.kebab-menu {
+    position: fixed;
+    z-index: 3000;
+    min-width: 230px;
+    max-width: min(320px, calc(100vw - 24px));
+    padding: 6px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(12, 18, 30, 0.22);
+}
+.kebab-menu-name {
+    padding: 8px 12px 4px;
+    font-weight: 600;
+    color: var(--navy);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.kebab-item {
+    display: block;
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.kebab-item small { display: block; color: var(--muted); font-size: 0.72rem; }
+.kebab-item:hover, .kebab-item:focus-visible { background: var(--info-tint); color: var(--info); outline: none; }
+.kebab-item.kebab-danger { color: var(--error); }
+.kebab-item.kebab-danger:hover, .kebab-item.kebab-danger:focus-visible { background: var(--error-tint); color: var(--error); }
+.kebab-menu form { margin: 0; }
+.kebab-sep { height: 1px; margin: 4px 6px; background: var(--border); }
+
+/* ---- "Who found / claimed it?" picker (status -> Resolved) ---- */
+.resolver-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 4px; max-height: 260px; overflow-y: auto; }
+.resolver-choice { width: 100%; text-align: center; }
+.resolver-other { display: flex; gap: 8px; margin-top: 4px; }
+.resolver-other input { flex: 1; min-width: 0; }
+.resolver-form { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.detail-none { color: var(--muted); }
+
+/* ====================================================================== */
+/* SLEEK LAYOUT (redesign merge)                                           */
+/* Always-visible left sidebar on desktop; slides in from the left on      */
+/* phones/tablets. Everything below overrides the older rules above.       */
+/* ====================================================================== */
+:root {
+    --sidebar-w: 248px;
+    --topbar-h: 68px;
+    --surface-soft: #FAF9F6;
+    --shadow-soft: 0 1px 2px rgba(20, 37, 66, 0.04), 0 6px 20px rgba(20, 37, 66, 0.05);
+    --radius-lg: 12px;
+}
+body::before { opacity: 0.08; }
+body.menu-open { overflow: hidden; }
+
+.app-shell { display: flex; min-height: 100vh; width: 100%; }
+.workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+/* ---- Sidebar ---- */
+.side-menu {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: auto;
+    height: 100vh;
+    width: var(--sidebar-w);
+    max-width: none;
+    flex: 0 0 var(--sidebar-w);
+    background: var(--card-bg);
+    color: var(--ink);
+    border-right: 1px solid var(--border);
+    transform: none;
+    visibility: visible;
+    transition: none;
+    box-shadow: none;
+    padding: 22px 14px 18px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 80;
+}
+.side-menu.open { transform: none; box-shadow: none; }
+.side-menu-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 8px 24px; margin: 0; border: 0; gap: 8px;
+}
+.side-menu-head .brand-logo { height: 42px; max-width: 180px; object-fit: contain; }
+.side-menu-head .icon-btn { color: var(--navy); width: 36px; height: 36px; flex: 0 0 36px; }
+.side-menu-head .icon-btn:hover { background: var(--maroon-tint); color: var(--maroon); }
+.menu-close { display: none; }
+
+.side-nav { display: grid; gap: 3px; }
+.side-menu a {
+    display: flex; align-items: center; gap: 12px;
+    color: var(--muted); padding: 10px 12px; border-radius: 8px;
+    font-weight: 600; font-size: 0.9rem; transition: background .12s ease, color .12s ease;
+}
+.side-menu a .nav-ico { flex-shrink: 0; }
+.side-menu a span:not(.badge-count) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-menu a .badge-count { margin-left: auto; }
+.side-menu a:hover { background: var(--maroon-tint); color: var(--maroon); text-decoration: none; }
+.side-menu a.active { background: var(--maroon-tint); color: var(--maroon); }
+.side-menu-divider {
+    padding: 18px 12px 6px; font-size: 0.66rem; font-weight: 800;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+.side-bottom { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); display: grid; gap: 3px; }
+.side-menu a.side-menu-logout { margin-top: 0; border-top: 0; }
+.side-menu a.side-menu-logout:hover { background: var(--error-tint); color: var(--error); }
+.side-menu-user { display: flex; align-items: center; gap: 10px; padding: 4px 8px 10px; min-width: 0; }
+.side-menu-user-text { min-width: 0; }
+.side-menu-name { font-size: 0.88rem; font-weight: 700; color: var(--navy); font-family: var(--font-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-menu-email { font-size: 0.74rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; }
+.side-help { margin: 0; padding: 4px 10px; font-size: 0.78rem; line-height: 1.55; color: var(--muted); }
+
+.avatar {
+    width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%;
+    background: var(--navy); color: #fff; font-size: 0.75rem; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; letter-spacing: 0.02em;
+}
+a.avatar-link:hover { text-decoration: none; background: var(--maroon); color: #fff; }
+
+/* ---- Top bar ---- */
+.site-header {
+    position: sticky; top: 0; z-index: 60;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+}
+.header-inner {
+    height: var(--topbar-h); padding: 0 clamp(16px, 3vw, 40px);
+    display: flex; align-items: center; gap: 12px; flex-wrap: nowrap;
+}
+.header-inner .brand { margin-right: 0; }
+.menu-toggle, .brand-mobile { display: none; }
+.brand-mobile .brand-logo { height: 34px; }
+.header-search {
+    position: relative; flex: 0 1 380px; min-width: 0; margin-right: auto;
+    display: flex; align-items: center;
+}
+.header-search .nav-ico { position: absolute; left: 12px; color: var(--muted); pointer-events: none; }
+a.header-search { text-decoration: none; }
+.header-search-box {
+    width: 100%; height: 40px; padding: 0 14px 0 38px; display: flex; align-items: center;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface-soft);
+    font-size: 0.88rem; color: var(--muted); cursor: text; white-space: nowrap; overflow: hidden;
+}
+a.header-search:hover .header-search-box { border-color: var(--maroon); background: #fff; }
+.header-search input {
+    width: 100%; height: 40px; padding: 0 14px 0 38px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface-soft);
+    font: inherit; font-size: 0.88rem; color: var(--ink);
+}
+.header-search input:focus { outline: none; border-color: var(--maroon); background: #fff; box-shadow: 0 0 0 3px var(--maroon-tint); }
+.header-icons { gap: 6px; flex-shrink: 0; }
+.icon-btn:hover, .icon-btn:focus-visible { background: var(--maroon-tint); color: var(--maroon); }
+.guest-nav { display: flex; gap: 8px; flex-shrink: 0; }
+.site-header .guest-nav a.btn { margin-left: 0; opacity: 1; border: 1px solid var(--maroon); line-height: 1.3; }
+.site-header .guest-nav a.btn:hover { border-color: var(--maroon-dark); }
+.site-header .guest-nav a.btn { color: #fff; }
+.site-header .guest-nav a.btn-secondary { color: var(--maroon); }
+.btn-sm { padding: 8px 16px !important; font-size: 0.85rem; }
+
+/* ---- Main area ---- */
+main.container {
+    width: 100%; max-width: 1320px; margin: 0 auto;
+    padding: 32px clamp(16px, 3vw, 40px) 56px; flex: 1;
+}
+.site-footer { background: transparent; padding: 18px 0; }
+.page-head { border-bottom: 0; padding-bottom: 0; align-items: flex-end; margin-bottom: 24px; }
+.page-head h1 { font-size: 1.9rem; }
+.page-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 0.92rem; }
+.btn, button.btn { border-radius: 8px; }
+
+/* ---- Stat cards ---- */
+.stat-grid.stat-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 30px; }
+.stat-grid-4 .stat-card {
+    position: relative; display: flex; flex-direction: column; gap: 6px;
+    background: var(--card-bg); border: 1px solid var(--border); border-top: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 18px 20px; box-shadow: var(--shadow-soft); text-align: left; min-width: 0;
+}
+.stat-grid-4 .stat-label { color: var(--muted); font-size: 0.82rem; font-weight: 600; order: 1; padding-right: 44px; }
+.stat-grid-4 .stat-num { order: 2; font-family: var(--font-body); font-weight: 700; font-size: 1.9rem; line-height: 1.1; color: var(--ink); }
+.stat-ico {
+    position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.ico-blue  { background: var(--info-tint);    color: var(--info); }
+.ico-gold  { background: var(--gold-tint);    color: #8A6516; }
+.ico-green { background: var(--success-tint); color: var(--success); }
+.ico-red   { background: var(--error-tint);   color: var(--error); }
+.ico-muted { background: #EEECE6;             color: var(--muted); }
+
+/* ---- Home ---- */
+.section-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.section-row h2 { margin: 0; font-size: 1.3rem; }
+.view-all { font-weight: 600; font-size: 0.9rem; white-space: nowrap; }
+.welcome {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 75%, var(--maroon) 160%);
+    color: #fff; border-radius: 16px; padding: clamp(26px, 5vw, 48px); margin-bottom: 26px; overflow: hidden;
+}
+.welcome .eyebrow { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: #C9D3E4; }
+.welcome h1 { color: #fff; font-size: clamp(1.9rem, 4.2vw, 3rem); line-height: 1.1; margin: 14px 0; }
+.welcome h1 em { font-style: normal; color: #F2C66D; }
+.welcome p { color: #D7DEEA; max-width: 440px; margin: 0 0 22px; }
+.welcome-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.welcome .btn-secondary { background: transparent; color: #fff; border-color: rgba(255,255,255,0.6); }
+.welcome .btn-secondary:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.guest-cta {
+    margin-top: 28px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px; box-shadow: var(--shadow-soft);
+}
+.guest-cta h3 { margin: 0 0 4px; }
+.guest-cta p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.empty-state { grid-column: 1 / -1; text-align: center; padding: 44px 18px; border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); background: var(--surface-soft); }
+.empty-state p { color: var(--muted); margin: 0; }
+
+/* ---- Item cards ---- */
+.card-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
+.item-card { border-radius: var(--radius-lg); box-shadow: var(--shadow-soft); }
+.item-card:hover { border-color: var(--maroon); transform: translateY(-2px); }
+.item-card { transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease; }
+.badge { border-radius: 999px; }
+.status { border-radius: 999px; }
+.item-meta { font-weight: 500; }
+.type-text { font-weight: 700; }
+.type-lost  { color: var(--maroon); }
+.type-found { color: var(--info); }
+.item-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.item-foot .status { margin-top: 0; }
+.item-time { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+
+/* ---- Browse: three-state segmented filter ---- */
+.filter-bar { border-radius: var(--radius-lg); box-shadow: var(--shadow-soft); align-items: center; }
+.segmented {
+    display: inline-flex; flex: 0 0 auto; background: #EEECE6; padding: 3px; border-radius: 9px; gap: 2px;
+}
+.seg-btn {
+    min-width: 64px; padding: 7px 14px; border-radius: 7px; text-align: center;
+    font-size: 0.85rem; font-weight: 600; color: var(--muted); line-height: 1.4;
+}
+.seg-btn:hover { text-decoration: none; color: var(--ink); }
+.seg-btn.selected { background: #fff; color: var(--ink); box-shadow: 0 1px 4px rgba(20, 37, 66, 0.14); }
+.seg-btn.seg-lost.selected  { color: var(--maroon); }
+.seg-btn.seg-found.selected { color: var(--info); }
+
+/* ---- Admin dashboard ---- */
+.dash-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; box-shadow: var(--shadow-soft); min-width: 0; }
+.panel-wide { grid-column: auto; }
+.panel-title { font-family: var(--font-body); font-size: 1rem; font-weight: 700; margin: 0 0 18px; color: var(--ink); }
+.panel-note { margin: 14px 0 0; color: var(--muted); font-size: 0.82rem; }
+.donut-wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.donut {
+    --p: 50; width: 168px; height: 168px; border-radius: 50%; flex-shrink: 0;
+    background: conic-gradient(var(--maroon) calc(var(--p) * 1%), var(--info) 0);
+    display: grid; place-items: center;
+}
+.donut[style*="--empty"] { background: #EEECE6; }
+.donut span { width: 104px; height: 104px; border-radius: 50%; background: var(--card-bg); display: grid; place-content: center; text-align: center; }
+.donut strong { font-size: 1.5rem; color: var(--ink); line-height: 1; }
+.donut small { color: var(--muted); font-size: 0.75rem; }
+.legend { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; flex: 1; min-width: 150px; }
+.legend li { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+.legend b { margin-left: auto; }
+.legend em { font-style: normal; color: var(--muted); width: 40px; text-align: right; }
+.dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.dot-lost { background: var(--maroon); }
+.dot-found { background: var(--info); }
+.hbars { display: grid; gap: 16px; }
+.hbar-head { display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 6px; }
+.hbar-track { height: 10px; background: #EEECE6; border-radius: 999px; overflow: hidden; }
+.hbar-fill { display: block; height: 100%; border-radius: 999px; min-width: 2px; }
+.hbar-active   { background: var(--gold); }
+.hbar-resolved { background: var(--success); }
+.hbar-closed   { background: var(--muted); }
+.vbars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: end; height: 190px; }
+.vbar { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; min-width: 0; }
+.vbar-num { font-size: 0.78rem; font-weight: 700; color: var(--ink); }
+.vbar-track { flex: 1; width: 100%; max-width: 38px; display: flex; align-items: flex-end; background: var(--surface-soft); border-radius: 8px; overflow: hidden; }
+.vbar-track span { display: block; width: 100%; background: linear-gradient(180deg, var(--maroon) 0%, var(--navy) 120%); border-radius: 8px 8px 0 0; min-height: 3px; }
+.vbar-label { font-size: 0.75rem; color: var(--muted); }
+.quick-actions { display: grid; gap: 8px; }
+.quick-actions a {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: 10px; color: var(--ink); font-weight: 600; font-size: 0.9rem;
+}
+.quick-actions a span { flex: 1; }
+.quick-actions a .nav-ico:last-child { color: var(--muted); }
+.quick-actions a:hover { text-decoration: none; border-color: var(--maroon); background: var(--maroon-tint); color: var(--maroon); }
+
+/* ---- Tablet & phone: sidebar becomes a slide-in drawer from the left ---- */
+@media (max-width: 1100px) {
+    .stat-grid.stat-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+    .side-menu {
+        position: fixed; top: 0; bottom: 0; left: 0; height: auto;
+        width: 280px; max-width: 86vw;
+        transform: translateX(-100%); visibility: hidden;
+        transition: transform 0.22s ease, visibility 0s linear 0.22s;
+    }
+    .side-menu.open {
+        transform: translateX(0); visibility: visible;
+        transition: transform 0.22s ease, visibility 0s;
+        box-shadow: 8px 0 28px rgba(12, 26, 46, 0.22);
+    }
+    .menu-close { display: inline-flex; }
+    .menu-toggle, .brand-mobile { display: inline-flex; }
+    .header-search { flex: 1 1 auto; }
+    .dash-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+    :root { --topbar-h: 60px; }
+    .header-inner { gap: 8px; padding: 0 12px; }
+    .brand-mobile { display: none; }
+    .header-search input { height: 38px; font-size: 16px; }
+    .site-header .admin-tag { display: none; }
+    .guest-nav .btn-secondary { display: none; }
+    main.container { padding: 20px 14px 40px; }
+    .page-head { align-items: stretch; }
+    .page-head > .btn { width: 100%; text-align: center; }
+    .page-head h1 { font-size: 1.5rem; }
+    .stat-grid.stat-grid-4 { gap: 10px; }
+    .stat-grid-4 .stat-card { padding: 14px; }
+    .stat-grid-4 .stat-num { font-size: 1.5rem; }
+    .stat-ico { width: 30px; height: 30px; top: 12px; right: 12px; }
+    .stat-grid-4 .stat-label { padding-right: 36px; font-size: 0.76rem; }
+    .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .item-body { padding: 10px 12px; }
+    .item-foot { flex-wrap: wrap; }
+    .filter-bar { padding: 12px; }
+    .filter-bar > * { flex: 1 1 100% !important; width: 100% !important; }
+    .segmented { display: flex; }
+    .seg-btn { flex: 1; min-width: 0; }
+    .donut-wrap { justify-content: center; }
+    .vbars { height: 160px; gap: 6px; }
+    .guest-cta .welcome-actions { width: 100%; }
+    .guest-cta .btn { flex: 1; text-align: center; }
+    .dropdown-panel { position: fixed !important; left: 10px !important; right: 10px !important; top: calc(var(--topbar-h) + 6px) !important; width: auto !important; max-width: none !important; }
+}
+@media (max-width: 380px) {
+    .card-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Segmented controls inside the report tables' toolbars + Manage Reports view switch */
+.table-toolbar .segmented { align-self: center; }
+
+@media (max-width: 600px) {
+    .table-toolbar { flex-wrap: wrap; }
+    .table-toolbar > * { flex: 1 1 100% !important; width: 100% !important; min-width: 0 !important; }
+    .table-toolbar .segmented { display: flex; }
+    .header-search-box { height: 38px; }
+}
+
+/* ---- v4: search is a plain icon button beside the bell/chat; icons sit on the right ---- */
+.header-icons, .guest-nav { margin-left: auto; display: flex; align-items: center; }
+.header-search-btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none !important; color: inherit; }
+.header-search-btn .nav-ico { position: static; }
+
+/* ---- v4: small-screen hardening — nothing may push the page wider than the phone ---- */
+html, body { max-width: 100%; overflow-x: clip; } /* clip, not hidden: hidden breaks the sticky sidebar */
+img, video, svg, canvas { max-width: 100%; }
+.app-shell, .workspace, main.container { max-width: 100vw; }
+@media (max-width: 900px) {
+    .app-shell { display: block; }
+    .workspace { width: 100%; }
+    main.container { padding-left: 16px; padding-right: 16px; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+    .search-field, .filter-bar input[type="text"], .filter-bar select,
+    .table-toolbar .report-filter, .table-toolbar input, .table-toolbar select { min-width: 0 !important; }
+    .filter-bar, .table-toolbar { flex-wrap: wrap; }
+    .page-head { flex-wrap: wrap; gap: 12px; }
+    .dash-grid, .stat-grid { min-width: 0; }
+    .messenger-list-pane { width: 100%; }
+    .match-card { width: 100%; min-width: 0; }
+    .modal-dialog, .report-modal-dialog { width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important; }
+}
+@media (max-width: 600px) {
+    .header-inner { padding: 0 10px; gap: 6px; }
+    .brand-mobile { display: inline-flex; }
+    .brand-mobile .brand-logo { height: 28px; }
+    .header-icons { gap: 2px; }
+    .icon-btn { width: 38px; height: 38px; }
+    .guest-nav .btn-secondary { display: inline-flex; }
+    .guest-nav .btn-sm { padding: 6px 10px !important; font-size: 0.8rem; }
+    h1, .page-head h1 { font-size: 1.4rem; overflow-wrap: anywhere; }
+    .segmented { width: 100%; }
+    .report-modal-dialog .form-submit button { min-width: 0; width: 100%; }
+    .data-table th, .data-table td { padding: 8px 6px; font-size: 0.85rem; }
+}
+
+/* ---- v5: sidebar logo tucked into the corner, vertically centred with the top-bar buttons ---- */
+.side-menu-head { height: var(--topbar-h); min-height: var(--topbar-h); padding: 0 12px 0 14px !important; margin: 0 !important; display: flex; align-items: center !important; box-sizing: border-box; }
+.side-menu-head .brand { display: flex; align-items: center; margin: 0; padding: 0; }
+.side-menu-head .brand-logo { height: 40px; }
+
+/* ---- v6: every segmented control looks exactly like the Browse one (buttons lose the global button look) ---- */
+button.seg-btn, a.seg-btn {
+    background: transparent !important; border: 0 !important; box-shadow: none !important; color: var(--muted) !important;
+    margin: 0 !important; min-width: 64px; width: auto; padding: 7px 14px !important; border-radius: 7px !important;
+    font: inherit; font-size: 0.85rem !important; font-weight: 600 !important; line-height: 1.4 !important;
+    cursor: pointer; text-transform: none; letter-spacing: 0; transform: none !important;
+}
+button.seg-btn:hover, a.seg-btn:hover { color: var(--ink) !important; background: transparent !important; }
+button.seg-btn.selected, a.seg-btn.selected { background: #fff !important; color: var(--ink) !important; box-shadow: 0 1px 4px rgba(20, 37, 66, 0.14) !important; }
+.seg-btn.seg-lost.selected  { color: var(--maroon) !important; }
+.seg-btn.seg-found.selected { color: var(--info) !important; }
+.table-toolbar .segmented { background: #EEECE6; padding: 3px; border-radius: 9px; gap: 2px; flex: 0 0 auto; width: auto; }
+.table-toolbar .view-seg { margin: 0 !important; align-self: center; }
+
+/* ---- v6: logo on the same line as the top-bar buttons (sidebar's own top padding removed) ---- */
+.side-menu { padding-top: 0 !important; }
+.side-menu-head { height: var(--topbar-h); padding-bottom: 0 !important; margin-bottom: 12px !important; }
+
+#guest-login-overlay[hidden] { display: none; }
+/* ---- v7: bigger sidebar logo ---- */
+.side-menu-head .brand-logo { height: 52px !important; max-width: 200px !important; }
+
+/* ---- v8: clearer campus background ---- */
+body::before { opacity: 0.14; filter: blur(0.6px); }
+
+/* ---- v8: animated segmented buttons ---- */
+.seg-btn, button.seg-btn, a.seg-btn {
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease !important;
+}
+button.seg-btn:active, a.seg-btn:active { transform: scale(0.95) !important; }
+@keyframes seg-pop { 0% { transform: scale(0.92); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
+.seg-btn.selected { animation: seg-pop 0.25s ease; }
+
+/* ---- v8: animated dropdowns ---- */
+@keyframes dropdown-in { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
+.dropdown-panel.open, .type-dropdown-menu:not([hidden]), .kebab-menu:not([hidden]) {
+    animation: dropdown-in 0.18s ease-out; transform-origin: top right;
+}
+select { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+@media (prefers-reduced-motion: reduce) {
+    .seg-btn.selected, .dropdown-panel.open, .type-dropdown-menu, .kebab-menu { animation: none !important; }
+}
+
+/* ---- v9: logo a touch smaller ---- */
+.side-menu-head .brand-logo { height: 46px !important; max-width: 190px !important; }
+
+/* ---- v9: segmented controls get a sliding highlight ---- */
+.segmented { position: relative; }
+.segmented .seg-indicator {
+    position: absolute; top: 3px; bottom: 3px; left: 0; width: 0; border-radius: 7px;
+    background: #fff; box-shadow: 0 1px 4px rgba(20, 37, 66, 0.14); pointer-events: none; z-index: 0;
+    transition: transform 0.28s cubic-bezier(.4, 0, .2, 1), width 0.28s cubic-bezier(.4, 0, .2, 1);
+}
+.segmented .seg-btn { position: relative; z-index: 1; }
+.segmented.has-ind .seg-btn.selected { background: transparent !important; box-shadow: none !important; animation: none; }
+.segmented.no-anim .seg-indicator { transition: none; }
+
+/* ---- v9: smoother filter dropdowns ---- */
+select, .report-filter, .type-dropdown-btn {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+select:hover, .report-filter:hover { border-color: var(--maroon); }
+select:focus, .report-filter:focus { box-shadow: 0 0 0 3px var(--maroon-tint); }
+.type-dropdown-menu:not([hidden]) { animation: dropdown-in 0.2s cubic-bezier(.2, .8, .2, 1); transform-origin: top left; }
+.type-dropdown-menu .date-mode-option, .type-dropdown-menu > * { transition: background-color 0.15s ease, color 0.15s ease; }
+
+/* ---- v9: login / register pages ---- */
+.form-card { width: 100%; max-width: 480px; min-width: 0; }
+.form-card input, .form-card select, .form-card textarea { width: 100%; min-width: 0; max-width: 100%; }
+.email-field { display: flex; width: 100%; min-width: 0; max-width: 100%; }
+.email-field input[type="text"] { flex: 1 1 auto; min-width: 0; width: auto; }
+.email-suffix { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.form-card button[type="submit"] { width: 100%; }
+@media (max-width: 600px) {
+    .form-card { padding: 20px 16px; }
+    .email-suffix { font-size: 0.8rem; padding-left: 6px; padding-right: 8px; }
+    .guest-nav { gap: 6px; }
+}
+@media (max-width: 380px) {
+    .guest-nav .btn-secondary { display: none; }
+}
+
+/* ---- v9: page-head buttons (Import / Export) wrap neatly on small screens ---- */
+.page-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.admin-links { gap: 8px; }
+.admin-links .btn { white-space: nowrap; }
+@media (max-width: 600px) {
+    .page-head-admin { flex-direction: column; align-items: stretch; }
+    .admin-links { width: 100%; }
+    .admin-links .btn { flex: 1 1 0; text-align: center; padding: 9px 10px; font-size: 0.85rem; }
+}
+
+/* ---- v10: toasts use the site blue ---- */
+.toast { background: var(--info) !important; box-shadow: 0 6px 20px rgba(28, 75, 124, 0.3); }
+
+/* ---- v10: one shared open animation for every popup ---- */
+#modal-overlay:not([hidden]), #verify-modal-overlay:not([hidden]), #forgot-modal-overlay:not([hidden]),
+#item-modal-overlay:not([hidden]), #report-modal-overlay:not([hidden]), #guest-login-overlay:not([hidden]) {
+    animation: popup-overlay-in 0.2s ease both;
+}
+#modal-overlay:not([hidden]) > *, #verify-modal-overlay:not([hidden]) > *, #forgot-modal-overlay:not([hidden]) > *,
+#item-modal-overlay:not([hidden]) > *, #report-modal-overlay:not([hidden]) > *, #guest-login-overlay:not([hidden]) > * {
+    animation: popup-dialog-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+    [id$="-overlay"]:not([hidden]), [id$="-overlay"]:not([hidden]) > * { animation: none !important; }
+}
+
+/* ====================================================================== */
+/* v11: phone fixes                                                        */
+/* ====================================================================== */
+
+/* ---- Messages page: the page is locked to one screen, so the shell and
+        workspace must fill exactly that height. Otherwise the inner lists
+        never get a height to scroll in and the composer is pushed off-screen. ---- */
+body.messenger-page .app-shell {
+    flex: 1 1 auto; min-height: 0; height: 100%;
+}
+body.messenger-page .workspace {
+    height: 100%; min-height: 0; overflow: hidden;
+    display: flex; flex-direction: column;
+}
+body.messenger-page main.container { flex: 1 1 auto; min-height: 0; }
+body.messenger-page .messenger,
+body.messenger-page .messenger-list-pane,
+body.messenger-page .messenger-thread-pane { min-height: 0; }
+body.messenger-page .convo-list,
+body.messenger-page .chat-window {
+    overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y;
+}
+body.messenger-page .chat-form { flex-shrink: 0; }
+@media (max-width: 900px) {
+    body.messenger-page main.container { padding-top: 12px; padding-bottom: 20px; } /* v15: ~10px more air at the bottom */
+    body.messenger-page footer.site-footer { display: none; }
+}
+
+/* ---- Menu open: lock scrolling on <html>, not <body>. Locking <body>
+        turned it into its own scroll box, which broke the sticky top bar. ---- */
+body.menu-open { overflow: visible; }
+html:has(body.menu-open) { overflow: hidden; }
+body.messenger-page.menu-open { overflow: hidden; }
+
+/* ---- Top bar on tablets/phones: burger left, logo (no title) centred, buttons right.
+        Same layout logged in or out. ---- */
+@media (max-width: 900px) {
+    .site-header .header-inner,
+    .site-header .header-inner:has(.guest-nav) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center !important;
+        flex-direction: row;
+        gap: 8px;
+    }
+    .header-inner .menu-toggle { grid-column: 1; justify-self: start; display: inline-flex; }
+    .header-inner .brand-mobile { grid-column: 2; justify-self: center; display: inline-flex !important; margin: 0 !important; }
+    .header-inner .header-icons,
+    .header-inner .guest-nav { grid-column: 3; justify-self: end; margin-left: 0; min-width: 0; }
+    .site-header .guest-nav { display: flex; flex-direction: row; align-items: center; gap: 6px; }
+    .site-header .guest-nav a { margin: 0; white-space: nowrap; }
+}
+@media (max-width: 600px) {
+    .header-inner .brand-mobile .brand-logo { height: 32px; }
+}
+@media (max-width: 380px) {
+    .guest-nav .btn-sm { padding: 6px 8px !important; font-size: 0.76rem; }
+    .header-icons .icon-btn { width: 34px; height: 34px; }
+}
+
+/* ---- Popups on small screens: buttons keep breathing room from the edges ---- */
+@media (max-width: 720px) {
+    .modal-dialog { padding: 20px 18px; }
+    .modal-actions {
+        display: grid; /* v15: grid so every button gets the same width, one per row when narrow */
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px; margin-top: 12px;
+    }
+    .modal-actions .btn, .modal-actions button { width: 100%; min-width: 0; text-align: center; }
+    .item-modal-dialog { padding: 20px 18px 18px; }
+    .item-modal-dialog .item-actions {
+        margin: 12px 0 0;
+        padding: 12px 0 0;
+    }
+    .report-modal-dialog .form-submit { padding-bottom: 4px; }
+}
+@media (max-width: 600px) {
+    .site-header .guest-nav .btn-secondary { display: inline-flex !important; }
+}
+
+/* ---- v12: logo back on the left next to the burger ---- */
+@media (max-width: 900px) {
+    .site-header .header-inner,
+    .site-header .header-inner:has(.guest-nav) {
+        grid-template-columns: auto auto minmax(0, 1fr);
+        gap: 6px;
+    }
+    .header-inner .brand-mobile { justify-self: start; margin-left: 2px !important; }
+}
+
+/* ---- v12: tidy guest buttons (top bar + home page) ---- */
+.welcome-actions .btn, .site-header .guest-nav a.btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    white-space: nowrap; line-height: 1.2; text-align: center;
+}
+.site-header .guest-nav a.btn {
+    height: 36px; padding: 0 14px !important; font-size: 0.85rem; font-weight: 600; border-radius: 8px;
+}
+.site-header .guest-nav a.btn-secondary { background: transparent; }
+.welcome-actions .btn { height: 44px; padding: 0 20px; }
+@media (max-width: 600px) {
+    .site-header .guest-nav a.btn { height: 34px; padding: 0 12px !important; font-size: 0.82rem; }
+    .welcome-actions { flex-wrap: nowrap; }
+    .welcome-actions .btn { flex: 1 1 0; min-width: 0; padding: 0 12px; font-size: 0.92rem; }
+    .guest-cta { padding: 20px 18px; }
+}
+@media (max-width: 360px) {
+    .site-header .guest-nav a.btn { padding: 0 9px !important; font-size: 0.78rem; }
+}
+
+/* ---- v14: hamburger belongs on the right edge — that's where the thumb is.
+        Logo stays left, Login/Register (or the icon bar) sit just left of it. ---- */
+@media (max-width: 900px) {
+    .site-header .header-inner,
+    .site-header .header-inner:has(.guest-nav) {
+        grid-template-columns: auto minmax(0, 1fr) auto auto;
+        gap: 8px;
+    }
+    .header-inner .brand-mobile { grid-row: 1; grid-column: 1; justify-self: start; margin-left: 2px !important; }
+    .header-inner .header-icons,
+    .header-inner .guest-nav { grid-row: 1; grid-column: 3; justify-self: end; }
+    .header-inner .menu-toggle { grid-row: 1; grid-column: 4; justify-self: end; }
+}
+@media (max-width: 380px) {
+    .site-header .header-inner,
+    .site-header .header-inner:has(.guest-nav) { gap: 5px; }
+}
+
+
+/* ====================================================================== */
+/* v16 tweaks                                                              */
+/* ====================================================================== */
+/* Toasts match the table header blue */
+.toast { background: var(--navy) !important; box-shadow: 0 6px 20px rgba(12, 26, 46, 0.3); }
+/* Top bar: blue bottom line */
+.site-header { border-bottom: 3px solid var(--navy) !important; }
+/* Sidebar logo a bit bigger, with breathing room on top */
+.side-menu-head { padding-top: 14px !important; height: auto !important; min-height: var(--topbar-h); }
+.side-menu-head .brand-logo { height: 54px !important; max-width: 210px !important; }
+/* Phones/tablets: full logo with title, admin badge stays visible */
+@media (max-width: 900px) {
+    .header-inner .brand-mobile .brand-logo { height: 36px !important; width: auto; max-width: 150px; object-fit: contain; }
+    .site-header .admin-tag { display: inline-flex !important; }
+}
+@media (max-width: 600px) {
+    .header-inner .brand-mobile .brand-logo { height: 32px !important; max-width: 120px; }
+    .site-header .admin-tag { font-size: 0.62rem; padding: 2px 6px; }
+}
+/* Comparison popup: solid report cards */
+.compare-col { background: var(--card-bg); }
+/* Messages list: Contact Admin sits neatly next to the heading on small screens */
+@media (max-width: 900px) {
+    .messenger-list-pane .page-head { flex-direction: row !important; flex-wrap: nowrap; align-items: center !important; justify-content: space-between; }
+    .messenger-list-pane .page-head h1 { margin: 0; }
+    .messenger-list-pane .page-head > .btn { width: auto !important; flex: 0 0 auto; padding: 7px 12px; font-size: 0.82rem; white-space: nowrap; }
+}
+/* Background photo no longer jumps when the phone's address bar hides/shows */
+body::before {
+    top: -12px; left: -12px; right: -12px; bottom: auto;
+    height: calc(100vh + 24px);
+    background-position: center bottom;
+}
+@supports (height: 100lvh) { body::before { height: calc(100lvh + 24px); } }
+/* Popups: close button stays pinned while scrolling, no visible scrollbar */
+.item-modal-dialog { scrollbar-width: none; -ms-overflow-style: none; }
+.item-modal-dialog::-webkit-scrollbar { display: none; }
+.item-modal-dialog > .item-modal-close {
+    position: sticky; top: 0; float: right;
+    margin: -14px -14px 0 8px; z-index: 5;
+    box-shadow: 0 1px 4px rgba(20, 37, 66, 0.15);
+}
+.modal-dialog { scrollbar-width: none; }
+.modal-dialog::-webkit-scrollbar { display: none; }
+
+/* ====================================================================== */
+/* v17 tweaks                                                              */
+/* ====================================================================== */
+/* Side menu: no tiny jump while scrolling (height no longer tied to the
+   changing phone address bar; own compositing layer) */
+.side-menu { height: 100svh; will-change: transform; backface-visibility: hidden; }
+@supports not (height: 100svh) { .side-menu { height: 100vh; } }
+@media (max-width: 900px) { .side-menu { height: auto; top: 0; bottom: 0; } }
+/* School email box: the @holychild.edu.ph part always fits fully */
+.email-field { min-width: 0; max-width: 100%; }
+.email-field input[type="text"] { flex: 1 1 0 !important; min-width: 40px !important; }
+.email-suffix {
+    flex: 0 0 auto !important; overflow: visible !important; text-overflow: clip !important;
+    white-space: nowrap; font-size: clamp(0.74rem, 2.6vw, 0.9rem);
+}
+@media (max-width: 420px) { .email-suffix { padding-left: 4px !important; padding-right: 8px !important; } }
+/* Popups: still scroll, but never show a scrollbar */
+[id$="-overlay"], [id$="-overlay"] *, .modal-dialog, .item-modal-dialog, .item-modal-body {
+    scrollbar-width: none !important; -ms-overflow-style: none;
+}
+[id$="-overlay"]::-webkit-scrollbar, [id$="-overlay"] *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+/* Small screens: no space reserved for a scrollbar */
+@media (max-width: 900px) {
+    html, body, .messenger-list-pane, .convo-list, .chat-window, * { scrollbar-gutter: auto !important; }
+}
+
+/* ====================================================================== */
+/* v18 tweaks                                                              */
+/* Logo placement taken from the sample: big logo at the top of the        */
+/* sidebar with air below it, and a larger logo in the phone/tablet top    */
+/* bar. The Admin badge stays visible next to the icons.                   */
+/* ====================================================================== */
+.side-menu { padding-top: 28px !important; }
+.side-menu-head {
+    height: auto !important; min-height: 0 !important;
+    padding: 2px 8px 34px !important; margin: 0 !important;
+    align-items: center !important;
+}
+.side-menu-head .brand { flex: 0 1 190px; min-width: 0; }
+.side-menu-head .brand-logo {
+    display: block; width: 100%; max-width: 190px !important;
+    height: auto !important; object-fit: contain;
+}
+@media (max-width: 900px) {
+    .header-inner .brand-mobile .brand-logo {
+        height: 38px !important; width: auto; max-width: 46vw; object-fit: contain;
+    }
+    .site-header .admin-tag { display: inline-flex !important; margin-right: 6px; }
+}
+@media (max-width: 600px) {
+    .header-inner .brand-mobile .brand-logo { height: 36px !important; max-width: 44vw; }
+    .site-header .admin-tag { font-size: 0.62rem; padding: 2px 6px; }
+}
+@media (max-width: 380px) {
+    .header-inner .brand-mobile .brand-logo { height: 30px !important; }
+}
+
+/* v18: "HCCD / Lost & Found" title in the desktop top bar (hidden on phones/tablets, where the logo shows) */
+.topbar-title { display: none; font-size: 13px; font-weight: 700; color: var(--navy); white-space: nowrap; margin-right: auto; }
+.topbar-title span { margin: 0 8px; color: var(--border-strong); }
+@media (min-width: 901px) {
+    .topbar-title { display: block; }
+    .header-inner .header-icons { margin-left: auto; }
+}
+
+/* v18: popups — the close button was a float, which squeezed the content
+   away from it and left a wider gap on the right than on the left. It is
+   now an in-flow sticky button that takes no horizontal space. */
+.item-modal-dialog > .item-modal-close {
+    float: none; display: flex;
+    margin: -14px -14px -18px auto;
+}
+
+/* v18: top bar on tablets/phones — more room between the edge and the buttons */
+@media (max-width: 900px) {
+    .site-header .header-inner { padding-left: 20px; padding-right: 20px; }
+}
+@media (max-width: 600px) {
+    .site-header .header-inner { padding-left: 18px; padding-right: 18px; }
+}
+@media (max-width: 380px) {
+    .site-header .header-inner { padding-left: 14px; padding-right: 14px; }
+}

@@ -1,0 +1,7 @@
+/vendor/
+uploads/items/*
+uploads/chat/*
+!uploads/items/.gitkeep
+!uploads/chat/.gitkeep
+# Email secrets: never commit (copy config/mail.local.example.php to config/mail.local.php)
+config/mail.local.php

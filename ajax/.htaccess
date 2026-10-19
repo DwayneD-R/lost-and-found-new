@@ -1,0 +1,6 @@
+# Apache's gzip (mod_deflate) collects a response before compressing it,
+# which would hold live SSE events back until the stream ends. Wrapped in
+# IfModule so a server without mod_env doesn't error out.
+<IfModule mod_env.c>
+    SetEnv no-gzip 1
+</IfModule>

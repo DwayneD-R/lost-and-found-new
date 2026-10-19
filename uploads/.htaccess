@@ -1,0 +1,4 @@
+# Prevent any uploaded PHP files from being executed.
+<FilesMatch "\.(php|phtml|php\d)$">
+    Require all denied
+</FilesMatch>

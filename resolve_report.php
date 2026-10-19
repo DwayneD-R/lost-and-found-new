@@ -1,0 +1,99 @@
+<?php
+require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/mail/emails.php'; // resolve_token()
+
+// The button in the "has your report been resolved?" email lands here. No login needed: the signed
+// link itself (report + person + expiry) is the proof.
+//
+// Opening the link (GET) only shows a page — the change is made by the POST a button on it sends. That
+// way an email scanner that merely "visits" links can't resolve a report by accident. The page asks who
+// found / claimed the item and lists the people this report's owner has talked to, so that is ONE click
+// (no typing): a name, "Someone else" (type a name), or "Skip".
+$reportId = (int) ($_GET['r'] ?? $_POST['r'] ?? 0);
+$userId   = (int) ($_GET['u'] ?? $_POST['u'] ?? 0);
+$exp      = (int) ($_GET['e'] ?? $_POST['e'] ?? 0);
+$token    = (string) ($_GET['t'] ?? $_POST['t'] ?? '');
+
+$state  = 'invalid';   // invalid | confirm | done | already | closed
+$report = null;
+$people = [];
+$flash  = '';
+
+if (APP_SECRET !== '' && $token !== '' && $reportId && $userId && $exp > time() && hash_equals(resolve_token($reportId, $userId, $exp), $token)) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Lock the report, check it again, change it — all or nothing.
+        $outcome = db_transaction($pdo, function () use ($pdo, $reportId, $userId) {
+            $stmt = $pdo->prepare('SELECT id, item_name, status FROM reports WHERE id = ? AND user_id = ? AND deleted_at IS NULL FOR UPDATE');
+            $stmt->execute([$reportId, $userId]);
+            $r = $stmt->fetch();
+            if (!$r) return ['invalid', null];
+            if ($r['status'] === 'resolved') return ['already', $r];
+            if ($r['status'] === 'closed')   return ['closed', $r];
+
+            $byId = null; $name = null;
+            $choice = (string) ($_POST['resolved_by'] ?? '');
+            if ($choice === 'other' && trim((string) ($_POST['resolved_by_name'] ?? '')) !== '') {
+                $name = mb_substr(trim((string) $_POST['resolved_by_name']), 0, 120);
+            } elseif (ctype_digit($choice)) {
+                foreach (report_resolver_candidates($pdo, $reportId, $userId) as $c) {
+                    if ($c['id'] === (int) $choice) { $byId = $c['id']; $name = $c['name']; }
+                }
+            }
+            $upd = $pdo->prepare("UPDATE reports SET status = 'resolved', resolved_by_user_id = ?, resolved_by_name = ?, resolved_at = NOW() WHERE id = ? AND status = 'active'");
+            $upd->execute([$byId, $name, $reportId]);
+            return [$upd->rowCount() === 1 ? 'done' : 'already', $r];
+        });
+        [$state, $report] = $outcome;
+    } else {
+        $stmt = $pdo->prepare('SELECT id, item_name, status FROM reports WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
+        $stmt->execute([$reportId, $userId]);
+        $report = $stmt->fetch();
+        if ($report) {
+            if ($report['status'] === 'resolved')    $state = 'already';
+            elseif ($report['status'] === 'closed')  $state = 'closed';
+            else { $state = 'confirm'; $people = report_resolver_candidates($pdo, $reportId, $userId); }
+        }
+    }
+}
+
+$pageTitle = 'Mark report as Resolved';
+require_once __DIR__ . '/includes/header.php';
+
+$hidden = '<input type="hidden" name="r" value="' . (int) $reportId . '"><input type="hidden" name="u" value="' . (int) $userId . '">'
+        . '<input type="hidden" name="e" value="' . (int) $exp . '"><input type="hidden" name="t" value="' . e($token) . '">';
+?>
+<div class="form-card" style="max-width:520px;margin:40px auto;text-align:center;display:block;">
+    <?php if ($state === 'confirm'): ?>
+        <h1>Mark your report as Resolved</h1>
+        <p>“<?= e($report['item_name']) ?>”</p>
+        <p><strong>Who found or claimed it?</strong><br><small>One click is all it takes — you can skip this.</small></p>
+        <form method="post" action="resolve_report.php" class="resolver-form">
+            <?= $hidden ?>
+            <?php foreach ($people as $p): ?>
+                <button type="submit" name="resolved_by" value="<?= (int) $p['id'] ?>" class="btn resolver-choice"><?= e($p['name']) ?></button>
+            <?php endforeach; ?>
+            <div class="resolver-other">
+                <input type="text" name="resolved_by_name" maxlength="120" placeholder="Someone else — type a name">
+                <button type="submit" name="resolved_by" value="other" class="btn btn-secondary">Save name</button>
+            </div>
+            <button type="submit" name="resolved_by" value="" class="btn btn-secondary resolver-skip">Skip — just mark it Resolved</button>
+        </form>
+    <?php elseif ($state === 'done'): ?>
+        <h1>Thanks — it's marked as Resolved</h1>
+        <p>“<?= e($report['item_name']) ?>” is now Resolved, so it stays open and won't be closed automatically.</p>
+        <p><a class="btn" href="index.php">Back to the site</a></p>
+    <?php elseif ($state === 'already'): ?>
+        <h1>Already marked as Resolved</h1>
+        <p>“<?= e($report['item_name']) ?>” was already Resolved — nothing more to do.</p>
+        <p><a class="btn" href="index.php">Back to the site</a></p>
+    <?php elseif ($state === 'closed'): ?>
+        <h1>This report is closed</h1>
+        <p>“<?= e($report['item_name']) ?>” has already been closed. Contact an admin if it should be reopened.</p>
+        <p><a class="btn" href="index.php">Back to the site</a></p>
+    <?php else: ?>
+        <h1>This link isn't valid</h1>
+        <p>It may have expired, or the report no longer exists. You can still change a report's status from <strong>My Reports</strong> after logging in.</p>
+        <p><a class="btn" href="login.php">Log in</a></p>
+    <?php endif; ?>
+</div>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>
