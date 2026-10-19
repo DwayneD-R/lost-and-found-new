@@ -79,10 +79,10 @@ require_once __DIR__ . '/includes/header.php';
         <span class="eyebrow">Holy Child College of Davao</span>
         <?php if ($loggedIn): ?>
             <h1><?= e($greet) ?>, <?= e($_SESSION['first_name'] ?? '') ?>!<br><em>Lost or found something?</em></h1>
-            <p>Reconnect what matters with the people it belongs to.</p>
+            <p>Help others find what they're looking for.</p>
         <?php else: ?>
             <h1>Lost something?<br><em>Found something?</em></h1>
-            <p>One place to reconnect what matters with the people it belongs to.</p>
+            <p>Report a lost item or browse found reports to find what you're looking for.</p>
         <?php endif; ?>
         <div class="welcome-actions">
             <?php if ($loggedIn): ?>

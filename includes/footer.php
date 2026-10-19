@@ -10,7 +10,7 @@ $publicFooterPages = [
 <?php if ($currentScript !== false && in_array($currentScript, $publicFooterPages, true)): ?>
 <footer class="site-footer">
     <div class="container">
-        <p>&copy; <?= date('Y') ?> Lost and Found System for Holy Child College of Davao</p>
+        <p><?= date('Y') ?> <span class="footer-nowrap">Lost and Found System</span> for <span class="footer-nowrap">Holy Child College of Davao</span></p>
     </div>
 </footer>
 <?php endif; ?>

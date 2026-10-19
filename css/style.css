@@ -3349,6 +3349,7 @@ body::before {
     animation: footer-color-drift 18s infinite alternate ease-in-out;
 }
 .site-footer p { margin: 0; }
+.footer-nowrap { white-space: nowrap; }
 @media (max-width: 600px) {
     .site-footer {
         padding: 12px 0;
