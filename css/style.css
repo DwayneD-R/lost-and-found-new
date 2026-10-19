@@ -3258,3 +3258,55 @@ body::before {
 @media (max-width: 380px) {
     .site-header .header-inner { padding-left: 14px; padding-right: 14px; }
 }
+
+/* ====================================================================== */
+/* v18: footer — halftone dots fading into the table-header blue, and a    */
+/* page layout that keeps the footer at the bottom on short pages          */
+/* ====================================================================== */
+/* Short pages (login, register…): the page is at least one screen tall and
+   the content area grows, so the footer sits at the bottom. On phones the
+   shell used to be display:block, which let the footer ride up. */
+.app-shell { min-height: 100vh; min-height: 100dvh; }
+@media (max-width: 900px) {
+    .app-shell { display: flex; }
+    .workspace { width: 100%; min-height: 100vh; min-height: 100dvh; }
+}
+.workspace > main.container { flex: 1 0 auto; }
+.workspace > .site-footer { flex-shrink: 0; }
+
+.site-footer {
+    border-top: 0;
+    padding: 164px 0 22px;
+    color: #cfd6e3;
+    background-color: transparent;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='144' viewBox='0 0 24 144' fill='%23142542'%3E%3Ccircle cx='12' cy='12' r='1.2'/%3E%3Ccircle cx='12' cy='36' r='3.2'/%3E%3Ccircle cx='12' cy='60' r='5.5'/%3E%3Ccircle cx='12' cy='84' r='8'/%3E%3Ccircle cx='12' cy='108' r='10.5'/%3E%3Ccircle cx='12' cy='132' r='17.5'/%3E%3C/svg%3E"), linear-gradient(var(--navy), var(--navy));
+    background-repeat: repeat-x, no-repeat;
+    background-position: left top, left bottom;
+    background-size: 24px 144px, 100% calc(100% - 143px);
+}
+.site-footer p { margin: 0; }
+@media (max-width: 600px) {
+    .site-footer {
+        padding: 120px 0 18px;
+        background-size: 18px 108px, 100% calc(100% - 107px);
+    }
+}
+/* The messages page is locked to one screen, so keep its footer slim (no dots) */
+body.messenger-page footer.site-footer {
+    padding: 12px 0; background-image: none; background-color: var(--navy);
+}
+
+/* v18: top bar on tablets/phones — a little breathing room above the logo and buttons */
+@media (max-width: 900px) {
+    .site-header .header-inner {
+        box-sizing: border-box; height: auto;
+        padding-top: 8px; padding-bottom: 8px;
+        min-height: calc(var(--topbar-h) + 16px);
+    }
+}
+@media (max-width: 380px) {
+    .site-header .header-inner {
+        padding-top: 6px; padding-bottom: 6px;
+        min-height: calc(var(--topbar-h) + 12px);
+    }
+}

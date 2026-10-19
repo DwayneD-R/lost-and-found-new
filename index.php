@@ -74,27 +74,27 @@ $greet = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good ev
 $pageTitle = $loggedIn ? 'Home' : 'Welcome';
 require_once __DIR__ . '/includes/header.php';
 ?>
-<?php if ($loggedIn): ?>
-<div class="page-head home-head">
-    <div>
-        <h1><?= e($greet) ?>, <?= e($_SESSION['first_name'] ?? '') ?>!</h1>
-        <p class="page-subtitle">Here's what's happening on campus.</p>
-    </div>
-    <a class="btn" href="report.php">+ Report an Item</a>
-</div>
-<?php else: ?>
 <section class="welcome">
     <div class="welcome-copy">
         <span class="eyebrow">Holy Child College of Davao</span>
-        <h1>Lost something?<br><em>Found something?</em></h1>
-        <p>One place to reconnect what matters with the people it belongs to.</p>
+        <?php if ($loggedIn): ?>
+            <h1><?= e($greet) ?>, <?= e($_SESSION['first_name'] ?? '') ?>!<br><em>Lost or found something?</em></h1>
+            <p>Reconnect what matters with the people it belongs to.</p>
+        <?php else: ?>
+            <h1>Lost something?<br><em>Found something?</em></h1>
+            <p>One place to reconnect what matters with the people it belongs to.</p>
+        <?php endif; ?>
         <div class="welcome-actions">
-            <a class="btn" href="register.php">Get started</a>
-            <a class="btn btn-secondary" href="login.php">Log in</a>
+            <?php if ($loggedIn): ?>
+                <a class="btn" href="report.php">+ Report an Item</a>
+                <a class="btn btn-secondary" href="search.php">Browse Reports</a>
+            <?php else: ?>
+                <a class="btn" href="register.php">Get started</a>
+                <a class="btn btn-secondary" href="login.php">Log in</a>
+            <?php endif; ?>
         </div>
     </div>
 </section>
-<?php endif; ?>
 
 <div class="stat-grid stat-grid-4">
     <div class="stat-card"><span class="stat-ico ico-blue"><?= nav_icon('archive') ?></span><span class="stat-label">Total Reports</span><span class="stat-num"><?= (int)$stats['total'] ?></span></div>

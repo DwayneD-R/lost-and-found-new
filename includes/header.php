@@ -198,8 +198,7 @@ if ($sideName !== '') {
             </div>
         <?php else: ?>
             <nav class="guest-nav">
-                <a class="btn btn-secondary btn-sm" href="<?= $prefix ?>login.php">Login</a>
-                <a class="btn btn-sm" href="<?= $prefix ?>register.php">Register</a>
+                <a class="btn btn-sm" href="<?= $prefix ?>login.php">Login</a>
             </nav>
         <?php endif; ?>
     </div>

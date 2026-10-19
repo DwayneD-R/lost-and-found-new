@@ -1,9 +1,19 @@
 </main>
+<?php
+$currentScript = realpath($_SERVER['SCRIPT_FILENAME'] ?? '');
+$publicFooterPages = [
+    realpath(__DIR__ . '/../index.php'),
+    realpath(__DIR__ . '/../login.php'),
+    realpath(__DIR__ . '/../register.php'),
+];
+?>
+<?php if ($currentScript !== false && in_array($currentScript, $publicFooterPages, true)): ?>
 <footer class="site-footer">
     <div class="container">
         <p>&copy; <?= date('Y') ?> Lost and Found System for Holy Child College of Davao</p>
     </div>
 </footer>
+<?php endif; ?>
 </div><!-- /.workspace -->
 </div><!-- /.app-shell -->
 <div id="image-modal" class="image-modal" hidden>
