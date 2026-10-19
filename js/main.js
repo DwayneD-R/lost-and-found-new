@@ -51,7 +51,10 @@ document.addEventListener('change', (e) => {
 // date too (and the year if it isn't this year). Mirrors format_message_time()
 // in includes/functions.php, which renders the messages that are there on load.
 function formatMessageTime(value) {
-    const d = new Date(value);
+    // MySQL DATETIME values have no timezone marker. Treat them as local
+    // application time instead of relying on browser-specific parsing rules.
+    const normalized = typeof value === 'string' ? value.replace(' ', 'T') : value;
+    const d = new Date(normalized);
     if (isNaN(d.getTime())) return '';
     const now = new Date();
     const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });

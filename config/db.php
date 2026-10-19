@@ -12,6 +12,10 @@ define('DB_PASS', '');
 define('SITE_NAME', 'HCCD Lost and Found');
 define('SCHOOL_EMAIL_DOMAIN', '@holychild.edu.ph');
 define('BASE_URL', 'http://localhost/lost-and-found'); // no trailing slash
+define('APP_TIMEZONE', 'Asia/Manila');
+
+// Keep PHP's date functions on the same local time used by the school.
+date_default_timezone_set(APP_TIMEZONE);
 
 try {
     $pdo = new PDO(
@@ -25,9 +29,9 @@ try {
         ]
     );
 
-// Keep MySQL's clock in sync with PHP's, so "today" (e.g. the Messages Today
-// counter) means the same day everywhere — even on hosts where MySQL runs in UTC.
-$pdo->exec("SET time_zone = '" . (new DateTime('now'))->format('P') . "'");
+// Keep MySQL's clock in sync with PHP's, so CURRENT_TIMESTAMP, NOW(), and
+// date formatting all use the same local time.
+$pdo->exec("SET time_zone = '+08:00'");
 } catch (PDOException $e) {
     die('Database connection failed: ' . $e->getMessage());
 }
