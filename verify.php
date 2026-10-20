@@ -73,12 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
         $upd = $pdo->prepare('UPDATE users SET is_verified = 1, verify_code = NULL, verify_expires = NULL WHERE id = ?');
         $upd->execute([$user['id']]);
         unset($_SESSION['pending_verify_email']);
+        // The pop-up moves on to login.php straight away, so a toast shown on this page would vanish —
+        // leave the message for the login page to show.
+        set_flash('Your account has been verified. You can now log in.', 'success');
         if ($isAjax) {
             header('Content-Type: application/json');
             echo json_encode(['ok' => true, 'redirect' => 'login.php', 'message' => 'Your account has been verified. You can now log in.']);
             exit;
         }
-        set_flash('Your account has been verified. You can now log in.', 'success');
         redirect('login.php');
     }
 

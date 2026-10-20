@@ -219,16 +219,16 @@ if (!$isPartial) {
         </select>
     </label>
     <label>Item Name
-        <input type="text" name="item_name" maxlength="25" value="<?= e($report['item_name']) ?>" required>
+        <input type="text" name="item_name" maxlength="25" placeholder="e.g. Black umbrella, Blue water bottle" value="<?= e($report['item_name']) ?>" required>
     </label>
     <label>Date Lost / Found
         <input type="date" name="item_date" value="<?= e($report['item_date']) ?>" required>
     </label>
     <label class="span-2">Location Last Seen / Found
-        <input type="text" name="location" value="<?= e($report['location']) ?>" required>
+        <input type="text" name="location" placeholder="e.g. Library, 2nd Floor" value="<?= e($report['location']) ?>" required>
     </label>
     <label>Description (optional)
-        <textarea name="description" rows="4"><?= e($report['description']) ?></textarea>
+        <textarea name="description" rows="4" placeholder="Add details that help identify it — color, brand, marks, what was inside…"><?= e($report['description']) ?></textarea>
     </label>
     <div class="form-field">
         <label data-photo-prefix="Replace photo of">Replace photo of <?= e($report['type']) ?> item (optional)</label>

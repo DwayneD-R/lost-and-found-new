@@ -773,7 +773,9 @@ const VerifyModal = {
             try {
                 const data = await post('code=' + encodeURIComponent(els.code.value.trim()) + '&email=' + encodeURIComponent(els.email.value.trim()));
                 if (data.ok) {
-                    Toast.show(data.message, 'success');
+                    // The server also left this message as a flash, so the page we go to next shows it as a toast
+                    // (a toast shown here would be wiped by the redirect before anyone saw it).
+                    if (!data.redirect) Toast.show(data.message, 'success');
                     this.close();
                     if (data.redirect) window.location.href = data.redirect;
                 } else {
@@ -2662,13 +2664,61 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (f.matches('.delete-msg-form')) MessengerScroll.save(true);
     }, true);
 
+    // Search box above the list: filters by person, report / subject and last message. The live updates
+    // below replace the list's markup, so the filter is re-applied after each one.
+    const searchInput = document.getElementById('convo-search');
+    const applyConvoFilter = () => {
+        const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        let shown = 0;
+        convoList.querySelectorAll('.convo-row-wrap').forEach((row) => {
+            const match = q === '' || row.textContent.toLowerCase().replace(/\s+/g, ' ').includes(q)
+                || (row.querySelector('.convo-row') || row).title.toLowerCase().includes(q);
+            row.hidden = !match;
+            if (match) shown++;
+        });
+        let none = convoList.querySelector('.convo-nomatch');
+        if (q !== '' && shown === 0 && convoList.querySelector('.convo-row-wrap')) {
+            if (!none) {
+                none = document.createElement('p');
+                none.className = 'convo-empty convo-nomatch';
+                convoList.appendChild(none);
+            }
+            none.textContent = 'No conversations match “' + searchInput.value.trim() + '”.';
+        } else if (none) {
+            none.remove();
+        }
+        const clear = document.getElementById('convo-search-clear');
+        if (clear) clear.hidden = q === '';
+    };
+    if (searchInput) {
+        searchInput.addEventListener('input', applyConvoFilter);
+        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Escape' && searchInput.value) { searchInput.value = ''; applyConvoFilter(); } });
+        const clear = document.getElementById('convo-search-clear');
+        if (clear) clear.addEventListener('click', () => { searchInput.value = ''; applyConvoFilter(); searchInput.focus(); });
+    }
+
     Live.on('convolist', (data) => {
         // Swapping innerHTML resets scrollTop to 0 — save and restore it so
         // the list stays visually still when an update lands.
         const scrollTop = convoList.scrollTop;
         convoList.innerHTML = data.html;
         convoList.scrollTop = scrollTop;
+        applyConvoFilter();
     });
+});
+
+// ---------------------------------------------------------
+// Home page greeting: follows the visitor's own clock, not the server's.
+// ---------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    const el = document.querySelector('[data-greeting]');
+    if (!el) return;
+    const update = () => {
+        const h = new Date().getHours();
+        el.textContent = (h >= 5 && h < 12) ? 'Good morning' : (h >= 12 && h < 18) ? 'Good afternoon' : 'Good evening';
+    };
+    update();
+    setInterval(update, 60000);
 });
 
 // ---------------------------------------------------------

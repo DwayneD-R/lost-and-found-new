@@ -157,6 +157,11 @@ require_once __DIR__ . '/includes/header.php';
                 <a class="btn btn-secondary" href="contact_admin.php">Contact Admin</a>
             <?php endif; ?>
         </div>
+        <div class="convo-search">
+            <svg class="convo-search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="search" id="convo-search" placeholder="Search conversations…" aria-label="Search conversations" autocomplete="off" spellcheck="false">
+            <button type="button" id="convo-search-clear" class="convo-search-clear" aria-label="Clear search" hidden>&times;</button>
+        </div>
         <div class="convo-list" id="convo-list" data-active="<?= (int)$convoId ?>">
         <?php render_convo_list($conversations, $convoId); ?>
         </div>

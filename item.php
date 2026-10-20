@@ -40,8 +40,8 @@ if (!$report || ($report['deleted_at'] !== null && !$isAdmin)) {
 $itemBase = $isPartial ? rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/') . '/' : '';
 
 // Side-by-side mode: a possible-match notification links here as
-// item.php?id=THEIR_REPORT&mine=YOUR_REPORT. Your report goes on the left, the
-// possible match on the right. "mine" only counts if it really is one of the
+// item.php?id=THEIR_REPORT&mine=YOUR_REPORT. The possible match goes on the left, your
+// report on the right. "mine" only counts if it really is one of the
 // signed-in user's own (not trashed) reports; otherwise this is the normal
 // single-report view.
 $mine = null;
@@ -157,13 +157,13 @@ if (!$isPartial) {
 <?php endif; ?>
 <?php if ($mine): ?>
     <div class="item-compare">
-        <div class="compare-col">
-            <p class="compare-label">Your report</p>
-            <?php render_report_detail($mine, $itemBase, true, true); ?>
-        </div>
         <div class="compare-col compare-col-match">
             <p class="compare-label compare-label-match">Possible match</p>
             <?php render_report_detail($report, $itemBase, true); ?>
+        </div>
+        <div class="compare-col">
+            <p class="compare-label">Your report</p>
+            <?php render_report_detail($mine, $itemBase, true, true); ?>
         </div>
     </div>
 <?php else: ?>

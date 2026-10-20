@@ -655,9 +655,83 @@ function verification_link($email, $code) {
     return app_url('verify.php?email=' . urlencode($email) . '&code=' . urlencode($code));
 }
 
-/** Full URL for a page on this site (uses BASE_URL, so set that to your public address — e.g. an ngrok URL — for links in emails). */
+/**
+ * This computer's address on the local network (e.g. 192.168.1.20), or '' if it can't be found.
+ * Used so links in emails open on OTHER devices: "localhost" in an email only works on the server itself.
+ */
+function server_lan_ip() {
+    static $ip = null;
+    if ($ip !== null) return $ip;
+    $ip = '';
+    $ok = fn($v) => is_string($v) && filter_var($v, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
+                    && strpos($v, '127.') !== 0 && $v !== '0.0.0.0' && strpos($v, '169.254.') !== 0;
+    // 1. The address the web server itself is listening on (when it isn't loopback).
+    if ($ok($_SERVER['SERVER_ADDR'] ?? '')) return $ip = $_SERVER['SERVER_ADDR'];
+    // 2. Ask the OS which interface it would use to reach the network. A UDP "connect" sends nothing.
+    $s = @stream_socket_client('udp://8.8.8.8:53', $en, $es, 1);
+    if ($s) {
+        $name = @stream_socket_get_name($s, false);
+        fclose($s);
+        $cand = $name ? preg_replace('/:\d+$/', '', $name) : '';
+        if ($ok($cand)) return $ip = $cand;
+    }
+    // 3. The machine's own host name.
+    $cand = @gethostbyname((string) gethostname());
+    if ($ok($cand)) return $ip = $cand;
+    return $ip;
+}
+
+/**
+ * The address links in emails should start with, e.g. "http://192.168.1.20/lost-and-found".
+ *  - Inside a web request it follows how this page was reached, so the links work for whoever is on the
+ *    same network: opened as localhost / 127.0.0.1 -> this computer's LAN IP; opened by IP -> that IP;
+ *    opened by the host name in BASE_URL (an ngrok / public address) -> that address.
+ *  - Any other Host header is ignored (it could be forged) and BASE_URL is used.
+ *  - Outside a web request (command line) it is BASE_URL.
+ */
+function app_base_url() {
+    static $base = null;
+    if ($base !== null) return $base;
+    $configured = rtrim(BASE_URL, '/');
+    $base = $configured;
+    $hostHeader = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    if (PHP_SAPI === 'cli' || $hostHeader === '') return $base;
+
+    $cfg = parse_url($configured) ?: [];
+    if (!preg_match('/^(\[[0-9a-f:]+\]|[^:]+)(?::(\d+))?$/i', $hostHeader, $m)) return $base;
+    $host = strtolower(trim($m[1], '[]'));
+    $port = $m[2] ?? '';
+
+    $isLoopback = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+    $isIp       = (bool) filter_var($host, FILTER_VALIDATE_IP);
+    $isConfigured = $host === strtolower((string) ($cfg['host'] ?? ''));
+    if ($isLoopback) {
+        $lan = server_lan_ip();
+        if ($lan === '') return $base;
+        $host = $lan;
+    } elseif (!$isIp && !$isConfigured) {
+        return $base;
+    }
+
+    $https  = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+              || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+    $scheme = $https ? 'https' : 'http';
+    $path   = (string) ($cfg['path'] ?? '');
+    // Work out the folder this app lives in from the running script, so a renamed folder still gives right links.
+    $script = realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? ''));
+    $root   = realpath(dirname(__DIR__));
+    $name   = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    if ($script && $root && strpos($script, $root) === 0 && $name !== '') {
+        $rel = str_replace('\\', '/', substr($script, strlen($root)));
+        if ($rel !== '' && substr($name, -strlen($rel)) === $rel) $path = rtrim(substr($name, 0, -strlen($rel)), '/');
+    }
+    $hostOut = strpos($host, ':') !== false ? '[' . $host . ']' : $host;
+    return $base = $scheme . '://' . $hostOut . ($port !== '' && !in_array($port, ['80', '443'], true) ? ':' . $port : '') . $path;
+}
+
+/** Full URL for a page on this site, for links in emails (see app_base_url() for how the address is chosen). */
 function app_url($path) {
-    return rtrim(BASE_URL, '/') . '/' . ltrim($path, '/');
+    return app_base_url() . '/' . ltrim($path, '/');
 }
 
 /**

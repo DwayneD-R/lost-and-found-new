@@ -94,21 +94,21 @@ if (!$isPartial) {
 <form method="post" action="<?= $isPartial ? e($itemBase . 'report.php') : '' ?>" enctype="multipart/form-data" class="form-card report-form">
     <label>This item was...
         <select name="type" required>
-            <option value="">-- select --</option>
+            <option value="" disabled<?= in_array($_POST['type'] ?? '', ['lost', 'found'], true) ? '' : ' selected' ?>>Select here</option>
             <option value="lost" <?= ($_POST['type'] ?? '') === 'lost' ? 'selected' : '' ?>>Lost</option>
             <option value="found" <?= ($_POST['type'] ?? '') === 'found' ? 'selected' : '' ?>>Found</option>
         </select>
     </label>
     <label>Category
         <select name="category" required>
-            <option value="">-- select --</option>
+            <option value="" disabled<?= in_array($_POST['category'] ?? '', $categories, true) ? '' : ' selected' ?>>Select here</option>
             <?php foreach ($categories as $c): ?>
                 <option value="<?= e($c) ?>" <?= ($_POST['category'] ?? '') === $c ? 'selected' : '' ?>><?= e($c) ?></option>
             <?php endforeach; ?>
         </select>
     </label>
     <label>Item Name
-        <input type="text" name="item_name" maxlength="25" value="<?= e($_POST['item_name'] ?? '') ?>" required>
+        <input type="text" name="item_name" maxlength="25" placeholder="e.g. Black umbrella, Blue water bottle" value="<?= e($_POST['item_name'] ?? '') ?>" required>
     </label>
     <label>Date Lost / Found
         <input type="date" name="item_date" value="<?= e($_POST['item_date'] ?? '') ?>" required>
@@ -117,7 +117,7 @@ if (!$isPartial) {
         <input type="text" name="location" placeholder="e.g. Library, 2nd Floor" value="<?= e($_POST['location'] ?? '') ?>" required>
     </label>
     <label>Description (optional)
-        <textarea name="description" rows="4"><?= e($_POST['description'] ?? '') ?></textarea>
+        <textarea name="description" rows="4" placeholder="Add details that help identify it — color, brand, marks, what was inside…"><?= e($_POST['description'] ?? '') ?></textarea>
     </label>
     <div class="form-field">
         <?php $photoType = in_array($_POST['type'] ?? '', ['lost', 'found'], true) ? $_POST['type'] : 'lost / found'; ?>

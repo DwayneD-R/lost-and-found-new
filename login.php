@@ -18,12 +18,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!password_verify($password, $user['password_hash'])) {
         $errors[] = 'Incorrect password.';
     } elseif (!$user['is_verified']) {
-        // Don't just tell them to go verify — send a fresh code and take
-        // them straight to the page that accepts it, since there was
-        // otherwise no way back to it once the registration page was closed.
-        send_verification_code($pdo, $user['id'], $email, $user['first_name']);
+        // Not verified yet. If the code they already have is still valid, don't email another one — just
+        // reopen the verification pop-up. Only an expired (or missing) code gets replaced by a new one.
+        $codeActive = $user['verify_code'] && $user['verify_expires'] && strtotime($user['verify_expires']) >= time();
+        if (!$codeActive) {
+            send_verification_code($pdo, $user['id'], $email, $user['first_name']);
+        }
         $_SESSION['pending_verify_email'] = $email;
-        set_flash('Please verify your email before logging in — we just sent a new code to ' . $email . '.', 'info');
+        set_flash($codeActive
+            ? 'Please verify your email before logging in — enter the code we sent to ' . $email . '.'
+            : 'Please verify your email before logging in — your last code expired, so we just sent a new one to ' . $email . '.', 'info');
         // Modal over this page instead of navigating to verify.php — see
         // VerifyModal in js/main.js and the matching note in register.php.
         $pendingVerifyEmail = $email;

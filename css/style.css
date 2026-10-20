@@ -3390,3 +3390,54 @@ body.messenger-page footer.site-footer {
     .site-header::after,
     .site-footer { animation: none; }
 }
+
+/* ====================================================================== */
+/* v19 tweaks                                                              */
+/* ====================================================================== */
+
+/* Sidebar: nothing in it may scroll with the page. The old rule let the whole panel scroll (overflow-y: auto)
+   and its content ran a pixel or so past the screen height, so wheel-scrolling the page nudged the logo and
+   icons up. Now the panel itself is fixed and only the list of links scrolls, when there really are too many. */
+.side-menu { overflow: hidden !important; }
+.side-menu-head, .side-bottom { flex-shrink: 0; }
+.side-nav {
+    flex: 1 1 auto; min-height: 0; align-content: start;
+    overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+    overflow-anchor: none;
+}
+.side-nav:not(:hover) { scrollbar-color: transparent transparent; }
+
+/* Buttons a little closer to the logo (was 34px of space). */
+.side-menu-head { padding-bottom: 18px !important; }
+
+/* Conversation list: search box + three dots only on hover */
+.convo-row-wrap[hidden] { display: none !important; }
+.messenger-list-pane .convo-search { flex-shrink: 0; position: relative; margin: 0 2px 10px 0; }
+.convo-search input[type="search"] {
+    width: 100%; box-sizing: border-box; height: 40px; margin: 0;
+    padding: 0 36px 0 38px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card-bg); color: var(--ink); font: inherit; font-size: 0.9rem;
+    -webkit-appearance: none; appearance: none;
+}
+.convo-search input[type="search"]::-webkit-search-cancel-button { display: none; }
+.convo-search input[type="search"]:focus { outline: none; border-color: var(--info); box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 18%, transparent); }
+.convo-search-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.convo-search-clear {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+    background: transparent; color: var(--muted); font-size: 1.2rem; line-height: 1; cursor: pointer;
+}
+.convo-search-clear:hover { background: var(--maroon-tint); color: var(--maroon); }
+.convo-search-clear[hidden] { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+    .convo-row-wrap .kebab-btn { opacity: 0; transition: opacity .15s ease, color .15s ease, background .15s ease, box-shadow .15s ease; }
+    .convo-row-wrap:hover .kebab-btn,
+    .convo-row-wrap .kebab-btn:focus-visible,
+    .convo-row-wrap .kebab-btn[aria-expanded="true"] { opacity: 1; }
+}
+
+/* Report form: the "Select here" prompt looks like placeholder text until something is chosen */
+.report-form select:required:invalid { color: var(--muted); }
+.report-form select option { color: var(--ink); }
+.report-form select option[value=""] { color: var(--muted); }

@@ -14,15 +14,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (strlen($password) < 8) $errors[] = 'Password must be at least 8 characters.';
     if ($password !== $confirm) $errors[] = 'Passwords do not match.';
 
+    $existing = null;
     if (!$errors) {
-        $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt = $pdo->prepare('SELECT id, first_name, is_verified, verify_code, verify_expires FROM users WHERE email = ?');
         $stmt->execute([$email]);
-        if ($stmt->fetch()) {
+        $existing = $stmt->fetch() ?: null;
+        if ($existing && $existing['is_verified']) {
             $errors[] = 'An account with that email already exists.';
         }
     }
 
-    if (!$errors) {
+    if (!$errors && $existing) {
+        // Signed up before but never verified. Use the password they just typed, and:
+        //  - code still valid  -> don't send another email, just reopen the verification pop-up;
+        //  - code used up / expired -> send a fresh code.
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+        $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ? AND is_verified = 0')->execute([$hash, $existing['id']]);
+        $codeActive = $existing['verify_code'] && $existing['verify_expires'] && strtotime($existing['verify_expires']) >= time();
+        if (!$codeActive) {
+            send_verification_code($pdo, $existing['id'], $email, $existing['first_name']);
+        }
+        $_SESSION['pending_verify_email'] = $email;
+        set_flash($codeActive
+            ? 'This email is already waiting to be verified. Enter the code we sent earlier — your password was updated.'
+            : 'This email was waiting to be verified. We sent a new 6-digit code to your school email.', 'info');
+        $justRegisteredEmail = $email;
+        $_POST = [];
+    } elseif (!$errors) {
         // The name comes from the email (firstname.lastname@...) — nothing more to type.
         [$firstName, $lastName] = name_from_school_email($email);
         $code    = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);

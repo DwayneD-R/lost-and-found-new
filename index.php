@@ -70,7 +70,8 @@ $stats = $pdo->query(
      FROM reports WHERE deleted_at IS NULL"
 )->fetch();
 $hour = (int) date('G');
-$greet = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
+// 5:00-11:59 morning, 12:00-17:59 afternoon, otherwise evening. main.js re-works this from the visitor's own clock.
+$greet = ($hour >= 5 && $hour < 12) ? 'Good morning' : (($hour >= 12 && $hour < 18) ? 'Good afternoon' : 'Good evening');
 $pageTitle = $loggedIn ? 'Home' : 'Welcome';
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -78,7 +79,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="welcome-copy">
         <span class="eyebrow">Holy Child College of Davao</span>
         <?php if ($loggedIn): ?>
-            <h1><?= e($greet) ?>, <?= e($_SESSION['first_name'] ?? '') ?>!<br><em>Lost or found something?</em></h1>
+            <h1><span data-greeting><?= e($greet) ?></span>, <?= e($_SESSION['first_name'] ?? '') ?>!<br><em>Lost or found something?</em></h1>
             <p>Help others find what they're looking for.</p>
         <?php else: ?>
             <h1>Lost something?<br><em>Found something?</em></h1>
