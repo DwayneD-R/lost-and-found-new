@@ -10,8 +10,11 @@ message each other; admins manage reports and users. Emails go out through PHPMa
    only adds the `verify_attempts` column; the site would also add that by itself the first time it needs it.)
 3. `composer install` in the folder (PHPMailer; needs `extension=zip`).
 4. `config/db.php`: DB login and `BASE_URL`. Links in emails follow how the page was opened: via `localhost` they use this computer's network IP automatically, via an IP or the `BASE_URL` host they use that address (so set `BASE_URL` to your public address, e.g. ngrok, if people are off the LAN).
-5. Email: create `config/mail.local.php` defining `SMTP_USERNAME`, `SMTP_PASSWORD` (e.g. a Gmail app password)
-   and optionally `APP_SECRET` (signs the one-click email links). Or set them as environment variables.
+5. Email: copy `config/mail.local.example.php` to `config/mail.local.php` and fill in your own values:
+   `SMTP_USERNAME`, `SMTP_PASSWORD` (e.g. a Gmail app password) and `APP_SECRET` (a long random string that signs the
+   one-click email links; `php -r "echo bin2hex(random_bytes(32));"` makes one). The example file is the template that
+   is committed to GitHub; `mail.local.php` holds the real credentials, is listed in `.gitignore` and must never be
+   pushed. Or set the same names as environment variables instead.
 6. Open `http://localhost/lost-and-found/`. Default admin: `admin@holychild.edu.ph` / `Admin123!` — change it.
 
 Live updates hold one PHP worker per open page, so use Apache/XAMPP (not single-threaded `php -S`).
