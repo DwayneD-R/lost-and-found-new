@@ -16,7 +16,8 @@ message each other; admins manage reports and users. Emails go out through PHPMa
    pushed. Or set the same names as environment variables instead. Also set `ADMIN_INBOX_EMAIL`: the admin account
    (`lostandfound@holychild.edu.ph`) is not a real mailbox, so every email meant for it is delivered to this address
    instead (if you leave it out, it goes to `SMTP_USERNAME`).
-6. Open `http://localhost/lost-and-found/`. Default admin: `lostandfound@holychild.edu.ph` / `Admin123!` — change it.
+6. Set the index.php of htdocs to: header('Location: '.$uri.'/lost-and-found/index.php');, and make sure that the xampp\htdocs\lost-and-found contains the index.php of the site.
+7. Open `http://localhost/lost-and-found/`. Default admin: `lostandfound@holychild.edu.ph` / `Admin123!` — change it.
 
 Live updates hold one PHP worker per open page, so use Apache/XAMPP (not single-threaded `php -S`).
 
