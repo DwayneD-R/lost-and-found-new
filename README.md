@@ -8,7 +8,7 @@ message each other; admins manage reports and users. Emails go out through PHPMa
 2. Import `sql/schema.sql` in phpMyAdmin. It creates the database, every table, the default admin and the
    built-in System Notifications account.
 3. `composer install` in the folder (PHPMailer; needs `extension=zip`).
-4. `config/db.php`: DB login and `BASE_URL`. Links in emails follow how the page was opened: via `localhost` they use this computer's network IP automatically, via an IP or the `BASE_URL` host they use that address (so set `BASE_URL` to your public address, e.g. ngrok, if people are off the LAN).
+4. `config/db.php`: DB login and `BASE_URL`. Links in emails follow how the page was opened: via `localhost` they use this computer's network IP automatically, via an IP or the `BASE_URL` host they use that address. Background email jobs apply the same LAN-IP fallback when `BASE_URL` is loopback (so set `BASE_URL` to your public address, e.g. ngrok, if people are off the LAN).
 5. Email: copy `config/mail.local.example.php` to `config/mail.local.php` and fill in your own values:
    `SMTP_USERNAME`, `SMTP_PASSWORD` (e.g. a Gmail app password) and `APP_SECRET` (a long random string that signs the
    one-click email links; `php -r "echo bin2hex(random_bytes(32));"` makes one). The example file is the template that
@@ -90,9 +90,9 @@ Every email uses the same branded layout. Emails for the admin account go to `AD
 (`mail_destination()` in `mail/emails.php`).
 
 **Links in emails.** They are built from how the page was opened (`app_url()` in `includes/functions.php`): opened as
-`localhost` → this computer's network IP, so the link works on a phone on the same Wi-Fi; opened by an IP or by the
-host in `BASE_URL` → that address; any other `Host` header is ignored and `BASE_URL` is used. Away from the school
-network, set `BASE_URL` to the public address (e.g. ngrok).
+`localhost` → this computer's network IP, so the link works on a phone on the same Wi-Fi; background jobs use the
+same fallback; opened by an IP or by the host in `BASE_URL` → that address; any other `Host` header is ignored and
+`BASE_URL` is used. Away from the school network, set `BASE_URL` to the public address (e.g. ngrok).
 
 **Notifications.** Automatic messages come from the built-in System account into each user's pinned System
 Notification thread: matches, status changes, admin edits, automatic closing, deleted conversations.

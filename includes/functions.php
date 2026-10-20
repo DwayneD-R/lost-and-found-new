@@ -725,20 +725,27 @@ function server_lan_ip() {
  *    same network: opened as localhost / 127.0.0.1 -> this computer's LAN IP; opened by IP -> that IP;
  *    opened by the host name in BASE_URL (an ngrok / public address) -> that address.
  *  - Any other Host header is ignored (it could be forged) and BASE_URL is used.
- *  - Outside a web request (command line) it is BASE_URL.
+ *  - In a command-line/background job, a loopback BASE_URL is replaced with this computer's LAN IP.
+ *    A configured public hostname or IP is kept.
  */
 function app_base_url() {
     static $base = null;
     if ($base !== null) return $base;
     $configured = rtrim(BASE_URL, '/');
     $base = $configured;
-    $hostHeader = (string) ($_SERVER['HTTP_HOST'] ?? '');
-    if (PHP_SAPI === 'cli' || $hostHeader === '') return $base;
-
     $cfg = parse_url($configured) ?: [];
-    if (!preg_match('/^(\[[0-9a-f:]+\]|[^:]+)(?::(\d+))?$/i', $hostHeader, $m)) return $base;
-    $host = strtolower(trim($m[1], '[]'));
-    $port = $m[2] ?? '';
+    $hostHeader = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    $isCli = PHP_SAPI === 'cli';
+
+    if ($isCli) {
+        $host = strtolower((string) ($cfg['host'] ?? ''));
+        $port = (string) ($cfg['port'] ?? '');
+    } else {
+        if ($hostHeader === '') return $base;
+        if (!preg_match('/^(\[[0-9a-f:]+\]|[^:]+)(?::(\d+))?$/i', $hostHeader, $m)) return $base;
+        $host = strtolower(trim($m[1], '[]'));
+        $port = $m[2] ?? '';
+    }
 
     $isLoopback = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
     $isIp       = (bool) filter_var($host, FILTER_VALIDATE_IP);
@@ -751,8 +758,10 @@ function app_base_url() {
         return $base;
     }
 
-    $https  = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
-              || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+    $https  = $isCli
+              ? strtolower((string) ($cfg['scheme'] ?? 'http')) === 'https'
+              : ((!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+                 || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https');
     $scheme = $https ? 'https' : 'http';
     $path   = (string) ($cfg['path'] ?? '');
     // Work out the folder this app lives in from the running script, so a renamed folder still gives right links.
