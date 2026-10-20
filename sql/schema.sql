@@ -32,7 +32,7 @@ CREATE TABLE users (
 
 -- Default admin account (password: Admin123! -- CHANGE AFTER FIRST LOGIN)
 INSERT INTO users (first_name, last_name, email, password_hash, role, is_verified)
-VALUES ('Admin', '', 'admin@holychild.edu.ph',
+VALUES ('Admin', '', 'lostandfound@holychild.edu.ph',
         '$2b$10$lGHpy/yCxQGeZ3/wdMV1MuAWEI4jxAGse.96xFbqHF3f1OeT39/e.', 'admin', 1);
 
 -- The built-in "System Notifications" account: the sender of every automated message (possible

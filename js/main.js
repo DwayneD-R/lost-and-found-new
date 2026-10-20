@@ -190,7 +190,6 @@ const ResolverPicker = {
                 message: people.length ? 'Who found or claimed the item? Pick a name to save it with the report.' : 'Who found or claimed the item? You can type a name, or skip this.',
                 cancelLabel: 'Cancel',
             });
-            els.confirmBtn.hidden = true;
             let done = false;
             const finish = (value) => { if (done) return; done = true; Modal.close(); resolve(value); };
             const wrap = document.createElement('div');
@@ -209,15 +208,7 @@ const ResolverPicker = {
             input.type = 'text';
             input.maxLength = 120;
             input.placeholder = 'Someone else — type a name';
-            const save = document.createElement('button');
-            save.type = 'button';
-            save.className = 'btn btn-secondary';
-            save.textContent = 'Save name';
-            save.disabled = true;
-            input.addEventListener('input', () => { save.disabled = input.value.trim() === ''; });
-            input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !save.disabled) save.click(); });
-            save.addEventListener('click', () => finish({ by: 'other', name: input.value.trim() }));
-            other.append(input, save);
+            other.appendChild(input);
             const skip = document.createElement('button');
             skip.type = 'button';
             skip.className = 'btn btn-secondary resolver-choice';
@@ -225,6 +216,21 @@ const ResolverPicker = {
             skip.addEventListener('click', () => finish({ by: '', name: '' }));
             wrap.append(other, skip);
             els.inputArea.appendChild(wrap);
+
+            // The modal's own Save button saves the typed name. Empty box -> an error toast, nothing is saved.
+            els.confirmBtn.textContent = 'Save';
+            els.confirmBtn.onclick = () => {
+                const name = input.value.trim();
+                if (!name) {
+                    Toast.show('Type a name first, or pick someone from the list, or skip.', 'error');
+                    input.focus();
+                    return;
+                }
+                finish({ by: 'other', name });
+            };
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); els.confirmBtn.click(); } });
+            // Clicking outside / Escape asks first if a name has been typed.
+            Modal.dirty = () => input.value.trim() !== '';
             // Cancel / Escape / clicking outside close the modal without choosing.
             const watcher = setInterval(() => { if (els.overlay.hidden) { clearInterval(watcher); finish(null); } }, 150);
         });
@@ -450,8 +456,54 @@ function closeUnlessDirty(isDirty, closeFn, what) {
     });
 }
 
+// Small "Discard what you've entered?" dialog that sits on top of the shared Modal (which can't ask itself,
+// because it is the dialog being closed). Used when a Modal that holds typed input is dismissed by clicking
+// outside it or pressing Escape.
+const DiscardGuard = {
+    overlay: null,
+    isOpen() { return !!this.overlay && !this.overlay.hidden; },
+    build() {
+        if (this.overlay) return this.overlay;
+        const overlay = document.createElement('div');
+        overlay.id = 'discard-modal-overlay';
+        overlay.hidden = true;
+        overlay.innerHTML = `
+            <div class="modal-dialog" role="alertdialog" aria-modal="true">
+                <h3>Discard what you've entered?</h3>
+                <p class="modal-message">It won't be saved.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-keep>Keep editing</button>
+                    <button type="button" class="btn btn-danger" data-discard>Yes, discard</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) this.hide(); });
+        overlay.querySelector('[data-keep]').addEventListener('click', () => this.hide());
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen()) { e.stopImmediatePropagation(); this.hide(); }
+        });
+        this.overlay = overlay;
+        return overlay;
+    },
+    hide() { if (this.overlay) this.overlay.hidden = true; },
+    ask(onDiscard) {
+        const overlay = this.build();
+        overlay.querySelector('[data-discard]').onclick = () => { this.hide(); onDiscard(); };
+        overlay.hidden = false;
+        overlay.querySelector('[data-keep]').focus();
+    },
+};
+
 const Modal = {
     els: null,
+    // Set by a dialog that holds typed input: returns true if there is something to lose.
+    dirty: null,
+
+    // Clicking outside / Escape: close, but ask first if something was typed.
+    requestClose() {
+        if (this.dirty && this.dirty()) { DiscardGuard.ask(() => this.close()); return; }
+        this.close();
+    },
 
     build() {
         if (this.els) return this.els;
@@ -471,13 +523,14 @@ const Modal = {
             </div>`;
         document.body.appendChild(overlay);
 
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) this.close(); });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) this.requestClose(); });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !overlay.hidden) {
+                if (DiscardGuard.isOpen()) return; // the discard question has its own Escape
                 // Only this dialog reacts; a popup underneath it must not
                 // also see the same keypress.
                 e.stopImmediatePropagation();
-                this.close();
+                this.requestClose();
             }
         });
         overlay.querySelector('#modal-cancel').addEventListener('click', () => this.close());
@@ -500,6 +553,8 @@ const Modal = {
         els.inputArea.innerHTML = '';
         els.error.textContent = '';
         els.confirmBtn.onclick = null;
+        this.dirty = null;
+        DiscardGuard.hide();
         // confirmTyped() disables this button until "yes" is typed; if that dialog
         // was cancelled it must not stay disabled for the next, plain confirmation.
         els.confirmBtn.disabled = false;
@@ -508,6 +563,7 @@ const Modal = {
 
     open({ title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger = false }) {
         const els = this.build();
+        this.dirty = null;
         els.confirmBtn.disabled = false;
         els.confirmBtn.hidden = false;
         els.cancelBtn.textContent = cancelLabel;
@@ -558,6 +614,7 @@ const Modal = {
         input.placeholder = 'Your password';
         els.inputArea.appendChild(input);
         input.focus();
+        this.dirty = () => input.value !== '';
 
         const attempt = async () => {
             const password = input.value;
@@ -1615,6 +1672,7 @@ function initFilePickers(root) {
             : null;
 
         function setPicked(file) {
+            picker.classList.toggle('has-file', !!file);
             if (file) {
                 btn.textContent = '\u00d7';
                 btn.classList.add('is-remove');

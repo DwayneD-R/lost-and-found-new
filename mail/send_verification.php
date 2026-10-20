@@ -37,6 +37,15 @@ if (!defined('APP_SECRET')) {
     // if there is one; with neither, resolve links are switched off (see resolve_token()).
     define('APP_SECRET', ($__env !== false && $__env !== '') ? $__env : (SMTP_PASSWORD !== '' ? hash('sha256', 'hccd-lost-and-found|' . SMTP_PASSWORD . '|' . DB_PASS) : ''));
 }
+// The admin account's address (lostandfound@holychild.edu.ph) is not a real mailbox. Anything the site would
+// email to that account is delivered to ADMIN_INBOX_EMAIL instead (see mail_destination() in emails.php).
+// Set the inbox in config/mail.local.php (or the ADMIN_INBOX_EMAIL environment variable); if it isn't set,
+// the sending Gmail account itself receives them.
+if (!defined('ADMIN_ACCOUNT_EMAIL')) define('ADMIN_ACCOUNT_EMAIL', 'lostandfound@holychild.edu.ph');
+if (!defined('ADMIN_INBOX_EMAIL')) {
+    $__env = getenv('ADMIN_INBOX_EMAIL');
+    define('ADMIN_INBOX_EMAIL', ($__env !== false && $__env !== '') ? $__env : SMTP_USERNAME);
+}
 unset($__mailLocal, $__k, $__default, $__env);
 
 /**

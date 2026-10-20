@@ -32,7 +32,10 @@ if (APP_SECRET !== '' && $token !== '' && $reportId && $userId && $exp > time() 
 
             $byId = null; $name = null;
             $choice = (string) ($_POST['resolved_by'] ?? '');
-            if ($choice === 'other' && trim((string) ($_POST['resolved_by_name'] ?? '')) !== '') {
+            if ($choice === 'other' && trim((string) ($_POST['resolved_by_name'] ?? '')) === '') {
+                return ['needname', $r];   // pressed Save with the box empty: nothing is changed
+            }
+            if ($choice === 'other') {
                 $name = mb_substr(trim((string) $_POST['resolved_by_name']), 0, 120);
             } elseif (ctype_digit($choice)) {
                 foreach (report_resolver_candidates($pdo, $reportId, $userId) as $c) {
@@ -44,6 +47,11 @@ if (APP_SECRET !== '' && $token !== '' && $reportId && $userId && $exp > time() 
             return [$upd->rowCount() === 1 ? 'done' : 'already', $r];
         });
         [$state, $report] = $outcome;
+        if ($state === 'needname') {
+            $state  = 'confirm';
+            $people = report_resolver_candidates($pdo, $reportId, $userId);
+            $flash  = 'Type a name first, or pick someone from the list, or skip.';
+        }
     } else {
         $stmt = $pdo->prepare('SELECT id, item_name, status FROM reports WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $stmt->execute([$reportId, $userId]);
@@ -67,17 +75,37 @@ $hidden = '<input type="hidden" name="r" value="' . (int) $reportId . '"><input 
         <h1>Mark your report as Resolved</h1>
         <p>“<?= e($report['item_name']) ?>”</p>
         <p><strong>Who found or claimed it?</strong><br><small>One click is all it takes — you can skip this.</small></p>
-        <form method="post" action="resolve_report.php" class="resolver-form">
+        <?php if ($flash !== ''): ?><div class="flash flash-error"><?= e($flash) ?></div><?php endif; ?>
+        <form method="post" action="resolve_report.php" class="resolver-form" id="resolver-form">
             <?= $hidden ?>
             <?php foreach ($people as $p): ?>
                 <button type="submit" name="resolved_by" value="<?= (int) $p['id'] ?>" class="btn resolver-choice"><?= e($p['name']) ?></button>
             <?php endforeach; ?>
             <div class="resolver-other">
                 <input type="text" name="resolved_by_name" maxlength="120" placeholder="Someone else — type a name">
-                <button type="submit" name="resolved_by" value="other" class="btn btn-secondary">Save name</button>
             </div>
-            <button type="submit" name="resolved_by" value="" class="btn btn-secondary resolver-skip">Skip — just mark it Resolved</button>
+            <div class="modal-actions">
+                <button type="submit" name="resolved_by" value="" class="btn btn-secondary resolver-skip" formnovalidate>Skip — just mark it Resolved</button>
+                <button type="submit" name="resolved_by" value="other" class="btn" id="resolver-save">Save</button>
+            </div>
         </form>
+        <script>
+        // Save with an empty name box: an error toast and nothing is sent. Enter in the box means Save
+        // (not the first person's name, which is what a form's default button would be).
+        (function () {
+            var form = document.getElementById('resolver-form');
+            var input = form.querySelector('[name="resolved_by_name"]');
+            var save = document.getElementById('resolver-save');
+            input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); save.click(); } });
+            form.addEventListener('submit', function (e) {
+                if (e.submitter === save && input.value.trim() === '') {
+                    e.preventDefault();
+                    Toast.show('Type a name first, or pick someone from the list, or skip.', 'error');
+                    input.focus();
+                }
+            });
+        })();
+        </script>
     <?php elseif ($state === 'done'): ?>
         <h1>Thanks — it's marked as Resolved</h1>
         <p>“<?= e($report['item_name']) ?>” is now Resolved, so it stays open and won't be closed automatically.</p>

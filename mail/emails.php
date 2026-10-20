@@ -34,8 +34,15 @@ function resolve_url($reportId, $userId) {
     return app_url('resolve_report.php?r=' . (int) $reportId . '&u=' . (int) $userId . '&e=' . $exp . '&t=' . resolve_token($reportId, $userId, $exp));
 }
 
+/** Where an email for this address really goes: the admin account's address maps to the admin's real inbox. */
+function mail_destination($email) {
+    if (ADMIN_INBOX_EMAIL !== '' && strcasecmp(trim((string) $email), ADMIN_ACCOUNT_EMAIL) === 0) return ADMIN_INBOX_EMAIL;
+    return $email;
+}
+
 /** Low-level send, right now. Returns true if the SMTP server accepted it. Used by the background sender. */
 function send_app_email($toEmail, $toName, $subject, $html, $text) {
+    $toEmail = mail_destination($toEmail);
     if (SMTP_USERNAME === '' || SMTP_PASSWORD === '') {
         error_log('App email not sent: SMTP is not configured (create config/mail.local.php from config/mail.local.example.php).');
         return false;

@@ -70,10 +70,6 @@ $navActive  = function ($file, $admin = false, $extra = null) use ($selfFile, $i
     return ' class="active" aria-current="page"';
 };
 $isTrashView = $inAdmin && $selfFile === 'reports.php' && (($_GET['view'] ?? '') === 'trash');
-$initials = '';
-if ($sideName !== '') {
-    foreach (preg_split('/\s+/', $sideName) as $w) { if ($w !== '' && strlen($initials) < 2) $initials .= strtoupper($w[0]); }
-}
 ?>
 <div class="app-shell">
 <div id="side-overlay" class="side-overlay"></div>
@@ -113,7 +109,6 @@ if ($sideName !== '') {
     <div class="side-bottom">
         <?php if (is_logged_in()): ?>
             <div class="side-menu-user">
-                <span class="avatar"><?= e($initials ?: '?') ?></span>
                 <div class="side-menu-user-text">
                     <div class="side-menu-name" title="<?= e($sideName) ?>"><?= e($sideName) ?></div>
                     <div class="side-menu-email" title="<?= e($sideEmail) ?>"><?= e($sideEmail) ?></div>

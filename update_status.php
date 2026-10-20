@@ -68,7 +68,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $upd->execute([$reportId, $expected]);
             } elseif ($status === 'resolved') {
                 $byId = null; $name = null;
-                if ($byInput === 'other' && $byName !== '') {
+                if ($byInput === 'other' && $byName === '') {
+                    return ['ok' => false, 'message' => 'Type a name first, or pick someone from the list, or skip.'];
+                }
+                if ($byInput === 'other') {
                     $name = $byName;
                 } elseif (ctype_digit($byInput) && (int) $byInput > 0) {
                     foreach (report_resolver_candidates($pdo, $reportId, $ownerId) as $c) {

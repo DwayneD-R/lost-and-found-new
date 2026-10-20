@@ -2631,11 +2631,6 @@ body.menu-open { overflow: hidden; }
 .side-menu-email { font-size: 0.74rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; }
 .side-help { margin: 0; padding: 4px 10px; font-size: 0.78rem; line-height: 1.55; color: var(--muted); }
 
-.avatar {
-    width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%;
-    background: var(--navy); color: #fff; font-size: 0.75rem; font-weight: 700;
-    display: inline-flex; align-items: center; justify-content: center; letter-spacing: 0.02em;
-}
 a.avatar-link:hover { text-decoration: none; background: var(--maroon); color: #fff; }
 
 /* ---- Top bar ---- */
@@ -3441,3 +3436,168 @@ body.messenger-page footer.site-footer {
 .report-form select:required:invalid { color: var(--muted); }
 .report-form select option { color: var(--ink); }
 .report-form select option[value=""] { color: var(--muted); }
+
+/* ====================================================================== */
+/* v19: report popup action bar on small screens + discard-changes popup   */
+/* ====================================================================== */
+/* The "discard what you've entered?" question sits above every other popup, styled like #modal-overlay. */
+#discard-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 22, 26, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 4100;
+}
+#discard-modal-overlay[hidden] { display: none; }
+#discard-modal-overlay:not([hidden]) { animation: popup-overlay-in 0.2s ease both; }
+#discard-modal-overlay:not([hidden]) > * { animation: popup-dialog-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+#discard-modal-overlay .modal-message { margin-bottom: 14px; }
+
+/* Small screens: the pinned button bar of the report popup used to leave a strip of the popup's own padding
+   underneath it, and the report text scrolled through that strip. The popup now has no bottom padding, so the
+   bar (solid background, full width, with room for the phone's home indicator) is the very bottom edge. */
+@media (max-width: 720px) {
+    .item-modal-dialog:not(.report-modal-dialog) { padding-bottom: 0; }
+    .item-modal-dialog:not(.report-modal-dialog) .item-detail { padding-bottom: 18px; }
+    .item-modal-dialog:not(.report-modal-dialog) .item-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 3;
+        margin: 12px -18px 0;
+        padding: 12px 18px max(16px, env(safe-area-inset-bottom, 0px));
+        background: var(--card-bg);
+        border-top: 1px solid var(--border);
+    }
+    /* Side-by-side comparison: the bars sit under each report and don't pin. */
+    .item-modal-dialog .item-compare .item-actions {
+        position: static;
+        margin: 0;
+        padding: 12px 0 0;
+        border: 0;
+        background: none;
+    }
+}
+
+/* ====================================================================== */
+/* v20: consistent popup buttons, steady side-menu icons, even X spacing,  */
+/*      pinned Save / Submit in form popups                                */
+/* ====================================================================== */
+
+/* ---- 1. Every popup button looks the same: same height, size, corners and border.
+        Primary = solid maroon, secondary = outlined maroon, danger = solid red. ---- */
+.modal-actions .btn, .modal-actions button,
+.item-actions .btn, .item-actions button,
+.report-modal-dialog .form-submit button {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 20px;
+    line-height: 1;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--maroon);
+    text-decoration: none;
+}
+.modal-actions .btn-secondary, .item-actions .btn-secondary {
+    background: transparent; color: var(--maroon); border-color: var(--maroon);
+}
+.modal-actions .btn-secondary:hover, .item-actions .btn-secondary:hover {
+    background: var(--maroon-tint); color: var(--maroon-dark);
+}
+.modal-dialog .btn-danger, .modal-actions .btn-danger {
+    background: var(--error); color: #fff; border-color: var(--error);
+}
+.modal-dialog .btn-danger:hover, .modal-actions .btn-danger:hover {
+    background: var(--error); color: #fff; filter: brightness(0.9);
+}
+.modal-actions .btn:not(.btn-secondary):not(.btn-danger):hover,
+.report-modal-dialog .form-submit button:hover { background: var(--maroon-dark); border-color: var(--maroon-dark); color: #fff; }
+/* the picker's name / skip buttons in the "who found it" popup match too */
+.resolver-choice { box-sizing: border-box; height: 44px; padding: 0 20px; line-height: 1; border: 1px solid var(--maroon); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+
+/* ---- 2. Side menu: every row is a whole number of pixels tall, icons are blocks, so nothing sits on a
+        half pixel and nothing "jumps" a pixel when the page scrolls. ---- */
+.side-menu a { box-sizing: border-box; height: 40px; padding-top: 0; padding-bottom: 0; line-height: 20px; }
+.side-menu a span:not(.badge-count) { line-height: 20px; }
+.side-menu a .nav-ico { display: block; width: 18px; height: 18px; flex: 0 0 18px; }
+.side-menu-divider { box-sizing: border-box; height: 38px; line-height: 14px; padding-top: 18px; padding-bottom: 6px; }
+.side-menu-name { line-height: 18px; }
+.side-menu-email { line-height: 16px; }
+.side-help { line-height: 20px; }
+
+/* ---- 3. The X in a popup is the same distance from the top and from the right (12px). ---- */
+.item-modal-dialog { --pad-t: 26px; --pad-x: 26px; --x-gap: 12px; padding-top: var(--pad-t); padding-left: var(--pad-x); padding-right: var(--pad-x); }
+.item-modal-dialog > .item-modal-close {
+    top: var(--x-gap);
+    margin-top: calc(var(--x-gap) - var(--pad-t));
+    margin-right: calc(var(--x-gap) - var(--pad-x));
+    margin-bottom: calc(-32px - (var(--x-gap) - var(--pad-t)));
+    margin-left: auto;
+}
+@media (max-width: 720px) {
+    .item-modal-dialog { --pad-t: 20px; --pad-x: 18px; }
+}
+
+/* ---- 4. Form popups (Report, Edit, Settings, Import, Export): the Submit / Save button stays pinned at the
+        bottom while the form scrolls, like the buttons when viewing a report. ---- */
+.report-modal-dialog:has(.form-submit) { padding-bottom: 0; }
+.report-modal-dialog .form-submit {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    margin: 0 calc(-1 * var(--pad-x));
+    padding: 12px var(--pad-x) max(16px, env(safe-area-inset-bottom, 0px));
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+}
+
+/* ====================================================================== */
+/* v21: bigger report photo preview, Contact Admin fill, side-menu name    */
+/* ====================================================================== */
+/* Report / Edit popup: once a photo is picked, its preview fills the free space beside the description and is
+   exactly as tall as the description box (full width of the column, so on a phone it is as wide as the box
+   too). It sits inside that fixed box, so a tall or wide photo can never stretch the popup. The remove "×"
+   becomes a small round button in the corner. */
+.report-form .file-picker-image.has-file {
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    height: 104px;
+}
+.report-form .file-picker-image.has-file .file-picker-thumb {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    object-fit: contain;
+    background: var(--bg);
+}
+.report-form .file-picker-image.has-file:hover .file-picker-thumb,
+.report-form .file-picker-image.has-file:has(.file-picker-btn:focus-visible) .file-picker-thumb {
+    opacity: 1;
+    border-radius: 10px;
+}
+.report-form .file-picker-image.has-file .file-picker-btn.is-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    box-shadow: 0 1px 4px rgba(20, 37, 66, 0.3);
+}
+
+/* Messages: the Contact Admin button has a solid white fill, so the page background never shows through it. */
+.messenger-list-pane .page-head .btn.btn-secondary { background: #fff; }
+.messenger-list-pane .page-head .btn.btn-secondary:hover { background: var(--maroon-tint); }
+
+/* Side menu: the name and email line up with the menu labels now that the avatar is gone. */
+.side-menu-user { padding-left: 12px; padding-right: 12px; }

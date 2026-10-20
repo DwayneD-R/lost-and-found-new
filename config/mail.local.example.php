@@ -22,6 +22,10 @@ define('SMTP_PASSWORD', 'your-16-character-app-password');
 // To generate one:  php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
 define('APP_SECRET', 'replace-with-a-long-random-string');
 
+// The admin account (lostandfound@holychild.edu.ph) is not a real mailbox, so emails meant for it are
+// delivered here instead. If you leave this out, they go to SMTP_USERNAME.
+define('ADMIN_INBOX_EMAIL', 'your-admin-inbox@gmail.com');
+
 // Optional (these are the defaults):
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
