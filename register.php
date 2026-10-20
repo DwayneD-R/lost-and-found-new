@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hash = password_hash($password, PASSWORD_BCRYPT);
         $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ? AND is_verified = 0')->execute([$hash, $existing['id']]);
         $codeActive = $existing['verify_code'] && $existing['verify_expires'] && strtotime($existing['verify_expires']) >= time();
-        if (!$codeActive) {
+        if (!$codeActive && !code_recently_sent($existing)) {
             send_verification_code($pdo, $existing['id'], $email, $existing['first_name']);
         }
         $_SESSION['pending_verify_email'] = $email;

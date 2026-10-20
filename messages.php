@@ -72,6 +72,16 @@ if ($convoId) {
         }
 
         $body = trim($_POST['body'] ?? '');
+        if (mb_strlen($body) > 2000) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                http_response_code(422);
+                echo json_encode(['error' => 'Messages can be at most 2000 characters.']);
+                exit;
+            }
+            set_flash('Messages can be at most 2000 characters.', 'error');
+            redirect('messages.php?id=' . $convoId);
+        }
         $imagePath = null;
         $uploadError = null;
         try {

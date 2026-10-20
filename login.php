@@ -13,15 +13,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $stmt->fetch();
 
     if (!$user) {
-        // Shown as a toast (see the __pendingToasts script further down).
-        $errors[] = 'No account found with that email address.';
+        // Shown as a toast (see the __pendingToasts script further down). The same words for a wrong email and a
+        // wrong password, so the form can't be used to find out which emails have accounts.
+        $errors[] = 'Incorrect email or password.';
     } elseif (!password_verify($password, $user['password_hash'])) {
-        $errors[] = 'Incorrect password.';
+        $errors[] = 'Incorrect email or password.';
     } elseif (!$user['is_verified']) {
         // Not verified yet. If the code they already have is still valid, don't email another one — just
         // reopen the verification pop-up. Only an expired (or missing) code gets replaced by a new one.
         $codeActive = $user['verify_code'] && $user['verify_expires'] && strtotime($user['verify_expires']) >= time();
-        if (!$codeActive) {
+        if (!$codeActive && !code_recently_sent($user)) {
             send_verification_code($pdo, $user['id'], $email, $user['first_name']);
         }
         $_SESSION['pending_verify_email'] = $email;

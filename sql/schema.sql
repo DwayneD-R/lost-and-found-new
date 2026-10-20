@@ -21,6 +21,7 @@ CREATE TABLE users (
     is_verified     TINYINT(1) NOT NULL DEFAULT 0,
     verify_code     VARCHAR(6) DEFAULT NULL,
     verify_expires  DATETIME DEFAULT NULL,
+    verify_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0, -- wrong guesses for the current code; at 5 the code is thrown away
     last_active_at  DATETIME DEFAULT NULL, -- stamped while the user is using the site (Manage Users shows it)
     email_matches       TINYINT(1) NOT NULL DEFAULT 1, -- Settings: email me possible matches
     email_resolved      TINYINT(1) NOT NULL DEFAULT 1, -- Settings: email me "has your report been resolved?"

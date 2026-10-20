@@ -19,4 +19,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-redirect($_SERVER['HTTP_REFERER'] ?? 'my_reports.php');
+// Back to the page the person came from — but only if that page is on this site (the Referer header is
+// sent by the browser and could name anywhere), and never to the report's own page, which no longer exists.
+$back = 'my_reports.php';
+$ref  = (string) ($_SERVER['HTTP_REFERER'] ?? '');
+if ($ref !== '') {
+    $p = parse_url($ref);
+    $sameHost = isset($p['host']) && strcasecmp($p['host'], preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? ''))) === 0;
+    if ($sameHost && !preg_match('#/item\.php$#', (string) ($p['path'] ?? ''))) {
+        $back = ($p['path'] ?? '/') . (isset($p['query']) ? '?' . $p['query'] : '');
+    }
+}
+redirect($back);

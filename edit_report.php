@@ -63,7 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif (mb_strlen($itemName) > 25) $errors[] = 'Item name must be 25 characters or fewer.';
     if (!in_array($category, $categories, true)) $errors[] = 'Choose a category.';
     if ($location === '') $errors[] = 'Location is required.';
+    elseif (mb_strlen($location) > 150) $errors[] = 'Location must be 150 characters or fewer.';
+    if (mb_strlen($description) > 2000) $errors[] = 'Description must be 2000 characters or fewer.';
+    $dateObj = $itemDate ? DateTime::createFromFormat('!Y-m-d', (string) $itemDate) : false;
     if (!$itemDate) $errors[] = 'Date is required.';
+    elseif (!$dateObj || $dateObj->format('Y-m-d') !== $itemDate) $errors[] = 'Enter a valid date.';
+    elseif ($itemDate > date('Y-m-d')) $errors[] = 'The date can’t be in the future.';
 
     $imagePath = $report['image_path'];
     $newUpload = null;
@@ -222,13 +227,13 @@ if (!$isPartial) {
         <input type="text" name="item_name" maxlength="25" placeholder="e.g. Black umbrella, Blue water bottle" value="<?= e($report['item_name']) ?>" required>
     </label>
     <label>Date Lost / Found
-        <input type="date" name="item_date" value="<?= e($report['item_date']) ?>" required>
+        <input type="date" name="item_date" max="<?= date('Y-m-d') ?>" value="<?= e($report['item_date']) ?>" required>
     </label>
     <label class="span-2">Location Last Seen / Found
-        <input type="text" name="location" placeholder="e.g. Library, 2nd Floor" value="<?= e($report['location']) ?>" required>
+        <input type="text" name="location" maxlength="150" placeholder="e.g. Library, 2nd Floor" value="<?= e($report['location']) ?>" required>
     </label>
     <label>Description (optional)
-        <textarea name="description" rows="4" placeholder="Add details that help identify it — color, brand, marks, what was inside…"><?= e($report['description']) ?></textarea>
+        <textarea name="description" rows="4" maxlength="2000" placeholder="Add details that help identify it — color, brand, marks, what was inside…"><?= e($report['description']) ?></textarea>
     </label>
     <div class="form-field">
         <label data-photo-prefix="Replace photo of">Replace photo of <?= e($report['type']) ?> item (optional)</label>

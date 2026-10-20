@@ -23,10 +23,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['email']) && !empty($_G
     $linkUser = $stmt->fetch();
     if ($linkUser && $linkUser['verify_code'] && hash_equals((string) $linkUser['verify_code'], $linkCode)
         && strtotime($linkUser['verify_expires']) >= time()) {
-        $pdo->prepare('UPDATE users SET is_verified = 1, verify_code = NULL, verify_expires = NULL WHERE id = ?')->execute([$linkUser['id']]);
-        unset($_SESSION['pending_verify_email']);
-        set_flash('Your account has been verified. You can now log in.', 'success');
-        redirect('login.php');
+        // One atomic step: only the request that still finds the code in place gets to use it.
+        $upd = $pdo->prepare('UPDATE users SET is_verified = 1, verify_code = NULL, verify_expires = NULL WHERE id = ? AND is_verified = 0 AND verify_code = ?');
+        $upd->execute([$linkUser['id'], $linkCode]);
+        if ($upd->rowCount() === 1) {
+            unset($_SESSION['pending_verify_email']);
+            set_flash('Your account has been verified. You can now log in.', 'success');
+            redirect('login.php');
+        }
+    } elseif ($linkUser && $linkUser['verify_code']) {
+        code_register_failure($pdo, $linkUser['id']);   // a wrong code in a link counts as a wrong guess too
     }
     $errors[] = 'That verification link is invalid or has expired. Enter the code from your email, or request a new one below.';
 }
@@ -34,15 +40,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['email']) && !empty($_G
 // Handle "resend code"
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resend'])) {
     $email = normalize_school_email($_POST['email'] ?? '');
-    $stmt = $pdo->prepare('SELECT id, first_name FROM users WHERE email = ? AND is_verified = 0');
+    $stmt = $pdo->prepare('SELECT id, first_name, verify_expires FROM users WHERE email = ? AND is_verified = 0');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
 
-    if ($user) {
-        send_verification_code($pdo, $user['id'], $email, $user['first_name']);
-    }
     // Same message whether or not the account exists, to avoid leaking which emails are registered.
     $message = 'If that email needs verification, a new code has been sent.';
+    if ($user && code_recently_sent($user)) {
+        // Someone clicking Resend over and over would flood the inbox: one new code per minute.
+        $message = 'A code was just sent. Please wait a minute before requesting another.';
+    } elseif ($user) {
+        send_verification_code($pdo, $user['id'], $email, $user['first_name']);
+    }
     if ($isAjax) {
         header('Content-Type: application/json');
         echo json_encode(['ok' => true, 'message' => $message]);
@@ -65,23 +74,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
 
     if (!$user) {
         $errors[] = 'No pending verification found for that email.';
-    } elseif (!$user['verify_code'] || $code !== $user['verify_code']) {
-        $errors[] = 'Incorrect code. Please try again.';
+    } elseif (!$user['verify_code']) {
+        $errors[] = $user['verify_expires']
+            ? 'Too many wrong attempts, so that code no longer works. Request a new one.'
+            : 'No active code for that email. Request a new one.';
+    } elseif (!hash_equals((string) $user['verify_code'], $code)) {
+        $burned = code_register_failure($pdo, $user['id']);
+        $errors[] = $burned ? 'Too many wrong attempts, so that code no longer works. Request a new one.' : 'Incorrect code. Please try again.';
     } elseif (strtotime($user['verify_expires']) < time()) {
         $errors[] = 'This code has expired. Request a new one below.';
     } else {
-        $upd = $pdo->prepare('UPDATE users SET is_verified = 1, verify_code = NULL, verify_expires = NULL WHERE id = ?');
-        $upd->execute([$user['id']]);
-        unset($_SESSION['pending_verify_email']);
-        // The pop-up moves on to login.php straight away, so a toast shown on this page would vanish —
-        // leave the message for the login page to show.
-        set_flash('Your account has been verified. You can now log in.', 'success');
-        if ($isAjax) {
-            header('Content-Type: application/json');
-            echo json_encode(['ok' => true, 'redirect' => 'login.php', 'message' => 'Your account has been verified. You can now log in.']);
-            exit;
+        // One atomic step: the code is checked and used up in the same statement.
+        $upd = $pdo->prepare('UPDATE users SET is_verified = 1, verify_code = NULL, verify_expires = NULL WHERE id = ? AND is_verified = 0 AND verify_code = ? AND verify_expires >= NOW()');
+        $upd->execute([$user['id'], $user['verify_code']]);
+        if ($upd->rowCount() !== 1) {
+            $errors[] = 'This code has expired. Request a new one below.';
+        } else {
+            unset($_SESSION['pending_verify_email']);
+            // The pop-up moves on to login.php straight away, so a toast shown on this page would vanish —
+            // leave the message for the login page to show.
+            set_flash('Your account has been verified. You can now log in.', 'success');
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => true, 'redirect' => 'login.php', 'message' => 'Your account has been verified. You can now log in.']);
+                exit;
+            }
+            redirect('login.php');
         }
-        redirect('login.php');
     }
 
     if ($isAjax) {

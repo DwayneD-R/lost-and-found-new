@@ -320,6 +320,12 @@ function handle_image_upload($fieldName, $destSubdir) {
         throw new RuntimeException('Image must be smaller than 5MB.');
     }
 
+    // The extension can be faked: the file itself must really be a JPG / PNG / GIF.
+    $info = @getimagesize($_FILES[$fieldName]['tmp_name']);
+    if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF], true)) {
+        throw new RuntimeException('That file is not a valid JPG, PNG, or GIF image.');
+    }
+
     $uploadDir = __DIR__ . '/../uploads/' . $destSubdir . '/';
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
@@ -631,6 +637,49 @@ function report_image_exists($path) {
     return is_file(dirname(__DIR__) . '/' . ltrim($path, '/'));
 }
 
+/** Wrong guesses allowed per emailed code before that code is thrown away (a new one has to be requested). */
+const CODE_MAX_ATTEMPTS = 5;
+/** Seconds that must pass before another code can be requested for the same account. */
+const CODE_RESEND_SECONDS = 60;
+
+/**
+ * The attempt counter lives in users.verify_attempts. A database made before it existed gets the column
+ * added here, once, so nobody has to remember to run sql/upgrade.sql for this to work.
+ */
+function code_guard_ready(PDO $pdo) {
+    static $ready = false;
+    if ($ready) return;
+    try {
+        $pdo->query('SELECT verify_attempts FROM users LIMIT 1');
+    } catch (Throwable $e) {
+        $pdo->exec('ALTER TABLE users ADD COLUMN verify_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER verify_expires');
+    }
+    $ready = true;
+}
+
+/**
+ * A wrong code was entered for this account. Counts it (in one atomic statement, so parallel guesses can't
+ * slip past the limit) and, at CODE_MAX_ATTEMPTS, throws the code away: the expiry time stays (it still times
+ * the resend wait) but the code itself is gone, so only a newly emailed code can work.
+ * @return bool true if this guess used up the last attempt
+ */
+function code_register_failure(PDO $pdo, $userId) {
+    code_guard_ready($pdo);
+    $pdo->prepare('UPDATE users SET verify_attempts = verify_attempts + 1 WHERE id = ? AND verify_code IS NOT NULL')->execute([(int) $userId]);
+    $stmt = $pdo->prepare('SELECT verify_attempts FROM users WHERE id = ?');
+    $stmt->execute([(int) $userId]);
+    if ((int) $stmt->fetchColumn() >= CODE_MAX_ATTEMPTS) {
+        $pdo->prepare('UPDATE users SET verify_code = NULL WHERE id = ?')->execute([(int) $userId]);
+        return true;
+    }
+    return false;
+}
+
+/** Has a code been sent to this account in the last CODE_RESEND_SECONDS? (A code is issued 15 minutes before it expires.) */
+function code_recently_sent(array $user) {
+    return !empty($user['verify_expires']) && strtotime($user['verify_expires']) - 15 * 60 > time() - CODE_RESEND_SECONDS;
+}
+
 /**
  * Generate a fresh 6-digit verification code for a not-yet-verified user,
  * store it (15 minute expiry), and email it. Shared by the "resend code"
@@ -640,7 +689,8 @@ function report_image_exists($path) {
 function send_verification_code(PDO $pdo, $userId, $email, $firstName) {
     $code    = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     $expires = date('Y-m-d H:i:s', time() + 15 * 60);
-    $upd = $pdo->prepare('UPDATE users SET verify_code = ?, verify_expires = ? WHERE id = ?');
+    code_guard_ready($pdo);
+    $upd = $pdo->prepare('UPDATE users SET verify_code = ?, verify_expires = ?, verify_attempts = 0 WHERE id = ?');
     $upd->execute([$code, $expires, $userId]);
 
     if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
@@ -743,7 +793,8 @@ function app_url($path) {
 function send_password_reset_code(PDO $pdo, $userId, $email, $firstName) {
     $code    = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     $expires = date('Y-m-d H:i:s', time() + 15 * 60);
-    $upd = $pdo->prepare('UPDATE users SET verify_code = ?, verify_expires = ? WHERE id = ?');
+    code_guard_ready($pdo);
+    $upd = $pdo->prepare('UPDATE users SET verify_code = ?, verify_expires = ?, verify_attempts = 0 WHERE id = ?');
     $upd->execute([$code, $expires, $userId]);
 
     if (file_exists(__DIR__ . '/../vendor/autoload.php')) {

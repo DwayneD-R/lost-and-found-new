@@ -29,31 +29,29 @@ $stmt = $pdo->prepare('SELECT id, first_name, is_verified, verify_code, verify_e
 $stmt->execute([$email]);
 $user = $stmt->fetch();
 
-// The built-in System Notifications account isn't a person's account.
-if (!$user || $email === SYSTEM_USER_EMAIL) reply(false, 'No account found with that email address.');
-
-if (!$user['is_verified']) {
-    // For an unverified account verify_code holds its REGISTRATION code, so
-    // don't overwrite it — it needs verifying first (logging in offers that).
-    reply(false, "That account hasn't been verified yet. Log in to enter your verification code first.");
-}
+// Whether an email has an account is never revealed here: an unknown address, the built-in System account
+// and an account that isn't verified yet all get the same answer as a real one. (The code just never arrives.)
+$generic = 'If that email has a verified account, we sent a 6-digit code to it. Check your Spam folder too. If you never verified it, log in to enter your verification code first.';
+$eligible = $user && $email !== SYSTEM_USER_EMAIL && $user['is_verified'];
 
 if ($action === 'send') {
+    if (!$eligible) reply(true, $generic);
+
     // A code that's still valid is reused: just tell the popup to show the
     // code step, without emailing another. "Resend Code" sends force=1 to
     // ask for a genuinely new one.
     $force       = ($_POST['force'] ?? '') === '1';
     $hasLiveCode = $user['verify_code'] && $user['verify_expires'] && strtotime($user['verify_expires']) > time();
     if ($hasLiveCode && !$force) {
-        reply(true, 'A code was already sent to your email and is still valid. Enter it below.', ['reused' => true]);
+        reply(true, $generic);   // same words as a fresh send, so this can't be told apart from an unknown address
     }
 
     // 60-second cooldown between codes (issued = expires - 15 minutes).
-    if ($user['verify_expires'] && strtotime($user['verify_expires']) - 15 * 60 > time() - 60) {
-        reply(false, 'A code was just sent. Please wait a minute before requesting another.');
+    if (code_recently_sent($user)) {
+        reply(true, $generic);   // (nothing new is sent; the one from a moment ago is still good)
     }
     send_password_reset_code($pdo, $user['id'], $email, $user['first_name']);
-    reply(true, 'We sent a 6-digit code to your school email. Check your Spam folder too.');
+    reply(true, $generic);
 }
 
 if ($action === 'reset') {
@@ -61,13 +59,20 @@ if ($action === 'reset') {
     $password = $_POST['password'] ?? '';
     $confirm  = $_POST['confirm'] ?? '';
 
-    if (!$user['verify_code'] || !hash_equals((string) $user['verify_code'], $code)) reply(false, 'Incorrect code. Please try again.');
+    if (!$eligible) reply(false, 'Incorrect code. Please try again.');
+    if (!$user['verify_code']) reply(false, 'Too many wrong attempts, so that code no longer works. Go back and request a new one.');
+    if (!hash_equals((string) $user['verify_code'], $code)) {
+        $burned = code_register_failure($pdo, $user['id']);
+        reply(false, $burned ? 'Too many wrong attempts, so that code no longer works. Go back and request a new one.' : 'Incorrect code. Please try again.');
+    }
     if (!$user['verify_expires'] || strtotime($user['verify_expires']) < time()) reply(false, 'This code has expired. Request a new one.');
     if (strlen($password) < 8) reply(false, 'Password must be at least 8 characters.');
     if ($password !== $confirm) reply(false, 'Passwords do not match.');
 
-    $upd = $pdo->prepare('UPDATE users SET password_hash = ?, verify_code = NULL, verify_expires = NULL WHERE id = ?');
-    $upd->execute([password_hash($password, PASSWORD_BCRYPT), $user['id']]);
+    // The code is checked and used up in the same statement, so two requests can't both use it.
+    $upd = $pdo->prepare('UPDATE users SET password_hash = ?, verify_code = NULL, verify_expires = NULL WHERE id = ? AND is_verified = 1 AND verify_code = ? AND verify_expires >= NOW()');
+    $upd->execute([password_hash($password, PASSWORD_BCRYPT), $user['id'], $user['verify_code']]);
+    if ($upd->rowCount() !== 1) reply(false, 'This code has expired. Request a new one.');
     reply(true, 'Your password has been changed. You can now log in.');
 }
 
