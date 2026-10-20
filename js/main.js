@@ -29,6 +29,67 @@ const Live = {
     emit(event, data) { (this.handlers[event] || []).forEach((fn) => fn(data)); },
 };
 
+// Keep the page underneath a modal from moving on touch devices. Modal
+// overlays are created lazily, so observe their hidden state rather than
+// duplicating lock/unlock calls in every modal implementation.
+const modalScrollLock = (() => {
+    const modalSelector = [
+        '#modal-overlay',
+        '#discard-modal-overlay',
+        '#verify-modal-overlay',
+        '#forgot-modal-overlay',
+        '#item-modal-overlay',
+        '#report-modal-overlay',
+        '#guest-login-overlay',
+        '#image-modal',
+    ].join(',');
+    let locked = false;
+    let bodyLocked = false;
+    let scrollY = 0;
+    const originalBodyStyles = {};
+    const bodyStyleProperties = ['position', 'top', 'left', 'right', 'width'];
+
+    const sync = () => {
+        const open = Array.from(document.querySelectorAll(modalSelector))
+            .some((modal) => !modal.hidden);
+        if (open === locked) return;
+
+        if (open) {
+            bodyLocked = window.matchMedia('(max-width: 900px)').matches;
+            if (bodyLocked) {
+                scrollY = window.scrollY;
+                bodyStyleProperties.forEach((property) => {
+                    originalBodyStyles[property] = document.body.style[property];
+                });
+                document.body.style.position = 'fixed';
+                document.body.style.top = `-${scrollY}px`;
+                document.body.style.left = '0';
+                document.body.style.right = '0';
+                document.body.style.width = '100%';
+            }
+            document.body.classList.add('modal-open');
+            document.documentElement.classList.add('modal-open');
+            locked = true;
+            return;
+        }
+
+        document.body.classList.remove('modal-open');
+        document.documentElement.classList.remove('modal-open');
+        if (bodyLocked) {
+            bodyStyleProperties.forEach((property) => {
+                document.body.style[property] = originalBodyStyles[property];
+            });
+            window.scrollTo(0, scrollY);
+            bodyLocked = false;
+        }
+        locked = false;
+    };
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+    return { sync };
+})();
+
 // ---------------------------------------------------------
 // Toast — brief, non-blocking feedback. Builds its container once, on
 // first use, and reuses it after that.
@@ -170,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ---------------------------------------------------------
-// "Who found or claimed it?" — shown when a report is marked Resolved, so the name is saved with a click
+// "Who found or claimed it?" — shown when a report is marked Resolved, so the name can be selected
 // instead of being typed. The choices are the people the owner has talked to about this report (the server
 // checks the chosen one again). Resolves to { by, name } (by = a user id, 'other' or ''), or null if cancelled.
 // ---------------------------------------------------------
@@ -187,21 +248,32 @@ const ResolverPicker = {
         return new Promise((resolve) => {
             const els = Modal.open({
                 title: 'Mark as Resolved',
-                message: people.length ? 'Who found or claimed the item? Pick a name to save it with the report.' : 'Who found or claimed the item? You can type a name, or skip this.',
+                message: people.length ? 'Who found or claimed the item? Select a name to save it with the report.' : 'Who found or claimed the item? You can type a name, or skip this.',
                 cancelLabel: 'Cancel',
             });
             let done = false;
             const finish = (value) => { if (done) return; done = true; Modal.close(); resolve(value); };
             const wrap = document.createElement('div');
             wrap.className = 'resolver-list';
-            people.forEach((p) => {
-                const b = document.createElement('button');
-                b.type = 'button';
-                b.className = 'btn resolver-choice';
-                b.textContent = p.name;
-                b.addEventListener('click', () => finish({ by: String(p.id), name: '' }));
-                wrap.appendChild(b);
-            });
+            let personSelect = null;
+            if (people.length) {
+                personSelect = document.createElement('select');
+                personSelect.className = 'resolver-select';
+                personSelect.setAttribute('aria-label', 'Who found or claimed the item?');
+                const prompt = document.createElement('option');
+                prompt.value = '';
+                prompt.textContent = 'Select a person';
+                prompt.disabled = true;
+                prompt.selected = true;
+                personSelect.appendChild(prompt);
+                people.forEach((p) => {
+                    const option = document.createElement('option');
+                    option.value = String(p.id);
+                    option.textContent = p.name;
+                    personSelect.appendChild(option);
+                });
+                wrap.appendChild(personSelect);
+            }
             const other = document.createElement('div');
             other.className = 'resolver-other';
             const input = document.createElement('input');
@@ -217,10 +289,14 @@ const ResolverPicker = {
             wrap.append(other, skip);
             els.inputArea.appendChild(wrap);
 
-            // The modal's own Save button saves the typed name. Empty box -> an error toast, nothing is saved.
+            // The modal's own Save button saves the selected person or typed name.
             els.confirmBtn.textContent = 'Save';
             els.confirmBtn.onclick = () => {
                 const name = input.value.trim();
+                if (personSelect && personSelect.value) {
+                    finish({ by: personSelect.value, name: '' });
+                    return;
+                }
                 if (!name) {
                     Toast.show('Type a name first, or pick someone from the list, or skip.', 'error');
                     input.focus();
@@ -229,6 +305,14 @@ const ResolverPicker = {
                 finish({ by: 'other', name });
             };
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); els.confirmBtn.click(); } });
+            input.addEventListener('input', () => {
+                if (personSelect) personSelect.value = '';
+            });
+            if (personSelect) {
+                personSelect.addEventListener('change', () => {
+                    input.value = '';
+                });
+            }
             // Clicking outside / Escape asks first if a name has been typed.
             Modal.dirty = () => input.value.trim() !== '';
             // Cancel / Escape / clicking outside close the modal without choosing.

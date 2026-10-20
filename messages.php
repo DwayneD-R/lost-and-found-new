@@ -43,9 +43,13 @@ if ($convoId) {
     }
 
     // The other person in the conversation (for the three-dot menu: their email, the report, delete).
+    $otherId = (int) $convo['user_a_id'] === (int) $myId ? $convo['user_b_id'] : $convo['user_a_id'];
     $otherStmt = $pdo->prepare('SELECT first_name, last_name, email FROM users WHERE id = ?');
-    $otherStmt->execute([(int) $convo['user_a_id'] === (int) $myId ? $convo['user_b_id'] : $convo['user_a_id']]);
+    $otherStmt->execute([$otherId]);
     $other = $otherStmt->fetch() ?: ['first_name' => '', 'last_name' => '', 'email' => ''];
+    $otherName = trim($other['first_name'] . ' ' . $other['last_name'])
+        ?: ((int) $convo['user_a_id'] === (int) $myId ? (string) $convo['user_b_name'] : (string) $convo['user_a_name']);
+    $otherDeleted = !$otherId;
 
     $threadTitle = $convo['is_system'] ? 'System Notification' : ($convo['report_id'] ? $convo['item_name'] : ($convo['subject'] ?: 'General Inquiry'));
 
@@ -68,6 +72,16 @@ if ($convoId) {
                 exit;
             }
             set_flash("You can't reply to system notifications.", 'error');
+            redirect('messages.php?id=' . $convoId);
+        }
+        if ($otherDeleted) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['error' => 'This user account has been deleted. You can no longer send messages in this conversation.']);
+                exit;
+            }
+            set_flash('This user account has been deleted. You can no longer send messages in this conversation.', 'error');
             redirect('messages.php?id=' . $convoId);
         }
 
@@ -107,8 +121,9 @@ if ($convoId) {
             $countStmt->execute([$convoId]);
             $isFirstMessage = (int) $countStmt->fetchColumn() === 0;
 
-            $ins = $pdo->prepare('INSERT INTO messages (conversation_id, sender_id, body, image_path) VALUES (?, ?, ?, ?)');
-            $ins->execute([$convoId, $myId, $body ?: null, $imagePath]);
+            $senderName = trim((string) ($_SESSION['first_name'] ?? '') . ' ' . (string) ($_SESSION['last_name'] ?? ''));
+            $ins = $pdo->prepare('INSERT INTO messages (conversation_id, sender_id, sender_name, body, image_path) VALUES (?, ?, ?, ?, ?)');
+            $ins->execute([$convoId, $myId, $senderName, $body ?: null, $imagePath]);
             $newId = $pdo->lastInsertId();
 
             if ($isFirstMessage) notify_new_conversation($pdo, $convo, $myId, $body);
@@ -119,8 +134,8 @@ if ($convoId) {
             $out = ['ok' => true, 'message' => null];
             if ($newId) {
                 $mstmt = $pdo->prepare(
-                    "SELECT m.id, m.body, m.image_path, m.created_at, m.sender_id, u.first_name
-                     FROM messages m JOIN users u ON u.id = m.sender_id WHERE m.id = ?"
+                    "SELECT m.id, m.body, m.image_path, m.created_at, m.sender_id, COALESCE(u.first_name, m.sender_name) AS first_name
+                     FROM messages m LEFT JOIN users u ON u.id = m.sender_id WHERE m.id = ?"
                 );
                 $mstmt->execute([$newId]);
                 $m = $mstmt->fetch();
@@ -147,7 +162,7 @@ if ($convoId) {
     $markRead->execute([$convoId, $myId]);
 
     $msgStmt = $pdo->prepare(
-        "SELECT m.*, u.first_name FROM messages m JOIN users u ON u.id = m.sender_id
+        "SELECT m.*, COALESCE(u.first_name, m.sender_name) AS first_name FROM messages m LEFT JOIN users u ON u.id = m.sender_id
          WHERE m.conversation_id = ? ORDER BY m.created_at ASC"
     );
     $msgStmt->execute([$convoId]);
@@ -184,11 +199,16 @@ require_once __DIR__ . '/includes/header.php';
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             </a>
             <h2 title="<?= e($threadTitle) ?>"><?= e($threadTitle) ?></h2>
-            <?php if (!$convo['is_system']): ?>
-                <?= convo_menu_button($convoId, trim($other['first_name'] . ' ' . $other['last_name']), $other['email'], $convo['report_id'], $convo['item_name']) ?>
+            <?php if (!$convo['is_system'] && !$otherDeleted): ?>
+                <?= convo_menu_button($convoId, $otherName, $other['email'], $convo['report_id'], $convo['item_name']) ?>
             <?php endif; ?>
         </div>
 
+        <?php if ($otherDeleted): ?>
+                <div class="chat-form-disabled-note chat-user-deleted-note" role="status">
+                    <?= e($otherName) ?>'s account has been deleted. This conversation is read-only.
+                </div>
+        <?php endif; ?>
         <?php $lastRenderedId = $messages ? (int) end($messages)['id'] : 0; ?>
         <div id="chat-window" class="chat-window" data-convo="<?= (int)$convoId ?>" data-me="<?= (int)$myId ?>" data-last-id="<?= $lastRenderedId ?>" data-since-deleted="<?= time() ?>" data-is-system="<?= $convo['is_system'] ? '1' : '0' ?>">
         <?php foreach ($messages as $m): ?>
@@ -233,6 +253,8 @@ require_once __DIR__ . '/includes/header.php';
 
         <?php if ($convo['is_system']): ?>
             <p class="chat-form-disabled-note">This is an automated thread — you can't reply here.</p>
+        <?php elseif ($otherDeleted): ?>
+            <p class="chat-form-disabled-note">You can't reply because this user account has been deleted.</p>
         <?php else: ?>
         <form method="post" enctype="multipart/form-data" class="chat-form" id="chat-form">
             <input type="text" name="body" placeholder="Type a message..." autocomplete="off">

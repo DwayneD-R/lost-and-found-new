@@ -62,11 +62,6 @@ function enforce_same_origin() {
 }
 enforce_same_origin();
 
-/** Seconds with no request AND no live page before a session is treated as abandoned (the safety net — see is_logged_in). */
-const SESSION_ABANDON_SECONDS = 60;
-/** After the "leave" beacon says a page was closed, a reload / next page has this long to show up before the login is ended. */
-const SESSION_LEAVE_GRACE_SECONDS = 15;
-
 /**
  * Is a user currently logged in? Checked on EVERY request, server-side — nothing here trusts the browser:
  *  1. the account must still exist and be verified (a deleted account's old session stops working at once),
@@ -373,9 +368,8 @@ function icon($name) {
 /**
  * Email of the built-in "System Notifications" account (the sender of
  * possible-match alerts — see system_user_id()). It's a real row
- * in `users` only because messages.sender_id and conversations.user_a_id are
- * NOT NULL foreign keys to that table, so a message needs SOME user to come
- * from. It's protected: admin/delete_user.php refuses to delete it, and
+ * in `users` because automated messages retain a sender identity. It's protected:
+ * admin/delete_user.php refuses to delete it, and
  * admin/users.php shows it without any actions.
  */
 const SYSTEM_USER_EMAIL = 'system@lost-and-found.internal';
@@ -426,14 +420,14 @@ function conversation_notice_info(PDO $pdo, array $convoIds) {
     if (!$convoIds) return [];
     $ph = implode(',', array_fill(0, count($convoIds), '?'));
     $stmt = $pdo->prepare(
-        "SELECT c.id, c.report_id, c.subject, c.user_a_id, c.user_b_id,
+        "        SELECT c.id, c.report_id, c.subject, c.user_a_id, c.user_b_id, c.user_a_name, c.user_b_name,
                 r.item_name,
                 ua.first_name AS a_first, ua.last_name AS a_last, ua.email AS a_email,
                 ub.first_name AS b_first, ub.last_name AS b_last, ub.email AS b_email
          FROM conversations c
          LEFT JOIN reports r ON r.id = c.report_id
-         JOIN users ua ON ua.id = c.user_a_id
-         JOIN users ub ON ub.id = c.user_b_id
+         LEFT JOIN users ua ON ua.id = c.user_a_id
+         LEFT JOIN users ub ON ub.id = c.user_b_id
          WHERE c.id IN ($ph) AND c.is_system = 0"
     );
     $stmt->execute($convoIds);
@@ -451,10 +445,11 @@ function notify_conversations_deleted(PDO $pdo, array $info, $exceptUserId = 0, 
     foreach ($info as $c) {
         $about = $c['report_id'] ? '“' . ($c['item_name'] ?? 'a removed item') . '”' : 'General inquiry';
         $people = [
-            [(int) $c['user_a_id'], $c['a_email'], trim($c['b_first'] . ' ' . $c['b_last'])],
-            [(int) $c['user_b_id'], $c['b_email'], trim($c['a_first'] . ' ' . $c['a_last'])],
+            [(int) $c['user_a_id'], $c['a_email'], $c['user_b_name'] ?: trim($c['b_first'] . ' ' . $c['b_last'])],
+            [(int) $c['user_b_id'], $c['b_email'], $c['user_a_name'] ?: trim($c['a_first'] . ' ' . $c['a_last'])],
         ];
         foreach ($people as [$userId, $email, $otherName]) {
+            if ($userId <= 0) continue;
             if (in_array($userId, $except, true) || $email === SYSTEM_USER_EMAIL) continue;
             $details = ['With' => $otherName, 'About' => $about];
             if ($reason !== '') $details['Reason'] = $reason;
@@ -506,7 +501,7 @@ function cleanup_conversations_for_reports(PDO $pdo, array $reportIds, $reason =
     cleanup_conversations($pdo, "c.report_id IN ($ph)", $ids, [], $reason);
 }
 
-/** Conversations of accounts that are about to be deleted. (Their reports are NOT deleted: see delete_user_accounts().) */
+/** Legacy cleanup helper for callers that explicitly remove conversation rows; account deletion no longer uses it. */
 function cleanup_conversations_for_users(PDO $pdo, array $userIds, $reason = 'The account was deleted') {
     $ids = array_values(array_unique(array_filter(array_map('intval', $userIds))));
     if (!$ids) return;
@@ -530,10 +525,9 @@ function auto_delete_stale_conversations(PDO $pdo) {
 }
 
 /**
- * Delete user accounts (never the built-in System account), together with their conversations and the
- * photos sent in those. Their REPORTS ARE KEPT: reports.user_id becomes NULL (ON DELETE SET NULL, see
- * sql/schema.sql) and the report shows "Deleted user" as its reporter, so a lost or found item never
- * disappears just because the person's account did. Returns how many accounts were deleted.
+ * Soft-delete user accounts (never the built-in System account). Their conversations and messages remain
+ * available to the other participant, while the account can no longer authenticate or receive new chats.
+ * Their reports are kept with their original owner reference.
  * Callers are responsible for not passing the signed-in admin's own id.
  */
 function delete_user_accounts(PDO $pdo, array $ids) {
@@ -548,9 +542,20 @@ function delete_user_accounts(PDO $pdo, array $ids) {
         if (!$ids) return 0;
         $ph = implode(',', array_fill(0, count($ids), '?'));
 
-        // Their conversations go first (photos cleared and the other people told — after the commit).
-        cleanup_conversations_for_users($pdo, $ids);
-
+        $nameStmt = $pdo->prepare("SELECT id, first_name, last_name FROM users WHERE id IN ($ph) FOR UPDATE");
+        $nameStmt->execute($ids);
+        $names = [];
+        foreach ($nameStmt->fetchAll() as $user) {
+            $names[(int) $user['id']] = trim($user['first_name'] . ' ' . $user['last_name']);
+        }
+        foreach ($names as $userId => $name) {
+            $pdo->prepare('UPDATE conversations SET user_a_name = COALESCE(user_a_name, ?), user_a_id = NULL WHERE user_a_id = ?')
+                ->execute([$name, $userId]);
+            $pdo->prepare('UPDATE conversations SET user_b_name = COALESCE(user_b_name, ?), user_b_id = NULL WHERE user_b_id = ?')
+                ->execute([$name, $userId]);
+            $pdo->prepare('UPDATE messages SET sender_name = COALESCE(sender_name, ?), sender_id = NULL WHERE sender_id = ?')
+                ->execute([$name, $userId]);
+        }
         $del = $pdo->prepare("DELETE FROM users WHERE id IN ($ph)");
         $del->execute($ids);
         return $del->rowCount();
@@ -643,28 +648,12 @@ const CODE_MAX_ATTEMPTS = 5;
 const CODE_RESEND_SECONDS = 60;
 
 /**
- * The attempt counter lives in users.verify_attempts. A database made before it existed gets the column
- * added here, once, so nobody has to remember to run sql/upgrade.sql for this to work.
- */
-function code_guard_ready(PDO $pdo) {
-    static $ready = false;
-    if ($ready) return;
-    try {
-        $pdo->query('SELECT verify_attempts FROM users LIMIT 1');
-    } catch (Throwable $e) {
-        $pdo->exec('ALTER TABLE users ADD COLUMN verify_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER verify_expires');
-    }
-    $ready = true;
-}
-
-/**
  * A wrong code was entered for this account. Counts it (in one atomic statement, so parallel guesses can't
  * slip past the limit) and, at CODE_MAX_ATTEMPTS, throws the code away: the expiry time stays (it still times
  * the resend wait) but the code itself is gone, so only a newly emailed code can work.
  * @return bool true if this guess used up the last attempt
  */
 function code_register_failure(PDO $pdo, $userId) {
-    code_guard_ready($pdo);
     $pdo->prepare('UPDATE users SET verify_attempts = verify_attempts + 1 WHERE id = ? AND verify_code IS NOT NULL')->execute([(int) $userId]);
     $stmt = $pdo->prepare('SELECT verify_attempts FROM users WHERE id = ?');
     $stmt->execute([(int) $userId]);
@@ -689,7 +678,6 @@ function code_recently_sent(array $user) {
 function send_verification_code(PDO $pdo, $userId, $email, $firstName) {
     $code    = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     $expires = date('Y-m-d H:i:s', time() + 15 * 60);
-    code_guard_ready($pdo);
     $upd = $pdo->prepare('UPDATE users SET verify_code = ?, verify_expires = ?, verify_attempts = 0 WHERE id = ?');
     $upd->execute([$code, $expires, $userId]);
 
@@ -793,7 +781,6 @@ function app_url($path) {
 function send_password_reset_code(PDO $pdo, $userId, $email, $firstName) {
     $code    = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     $expires = date('Y-m-d H:i:s', time() + 15 * 60);
-    code_guard_ready($pdo);
     $upd = $pdo->prepare('UPDATE users SET verify_code = ?, verify_expires = ?, verify_attempts = 0 WHERE id = ?');
     $upd->execute([$code, $expires, $userId]);
 
@@ -929,18 +916,6 @@ function status_label($status) {
     return ['active' => 'Active', 'resolved' => 'Resolved', 'closed' => 'Closed', 'deleted' => 'Deleted'][$status] ?? ucfirst((string) $status);
 }
 
-/** Days after it's filed that a report auto-closes (see auto_close_stale_reports()). */
-const REPORT_CLOSE_DAYS = 30;
-
-/** A user is "online" while they have a live connection (see the presence table): every open page's stream re-stamps its row every 10s, so a row not refreshed for this many seconds means the page is gone. */
-const ONLINE_WINDOW_SECONDS = 25;
-
-/** A conversation with no new message for this many days is deleted (see auto_delete_stale_conversations). */
-const CONVERSATION_EXPIRE_DAYS = 30;
-
-/** An Active report that hasn't been touched for this many days gets a "has it been resolved?" check-in (and again every this many days). */
-const RESOLVED_ASK_EVERY_DAYS = 14;
-
 /**
  * Cell content for the "Date Reported" column of the report tables: the date,
  * with a small "(closes in N days)" line under it while the report is still
@@ -990,10 +965,11 @@ function system_conversation_id(PDO $pdo, $userId) {
  */
 function recent_unread_messages(PDO $pdo, $userId, $limit = 30, $systemOnly = null) {
     $sql = "SELECT m.conversation_id AS convo_id, m.body, m.image_path, m.created_at,
-                   u.first_name, u.last_name
+                   COALESCE(u.first_name, m.sender_name) AS first_name,
+                   COALESCE(u.last_name, '') AS last_name
             FROM messages m
             JOIN conversations c ON c.id = m.conversation_id
-            JOIN users u ON u.id = m.sender_id
+            LEFT JOIN users u ON u.id = m.sender_id
             WHERE (c.user_a_id = ? OR c.user_b_id = ?)
               AND m.sender_id != ?
               AND m.is_read = 0"
@@ -1034,11 +1010,12 @@ function unread_message_count(PDO $pdo, $userId, $systemOnly = null) {
 function get_conversations(PDO $pdo, $myId) {
     $stmt = $pdo->prepare(
         "SELECT c.id AS convo_id, c.report_id, c.subject, c.is_system, r.item_name,
-            IF(c.user_a_id = ?, ub.first_name, ua.first_name) AS other_first,
-            IF(c.user_a_id = ?, ub.last_name, ua.last_name) AS other_last,
-            IF(c.user_a_id = ?, ub.email, ua.email) AS other_email,
+            IF(c.user_a_id = ?, COALESCE(ub.first_name, c.user_b_name), COALESCE(ua.first_name, c.user_a_name)) AS other_first,
+            IF(c.user_a_id = ?, COALESCE(ub.last_name, ''), COALESCE(ua.last_name, '')) AS other_last,
+            IF(c.user_a_id = ?, COALESCE(ub.email, ''), COALESCE(ua.email, '')) AS other_email,
             EXISTS (SELECT 1 FROM presence p WHERE p.user_id = IF(c.user_a_id = ?, c.user_b_id, c.user_a_id)
                     AND p.last_seen >= (NOW() - INTERVAL " . (int) ONLINE_WINDOW_SECONDS . " SECOND)) AS other_online,
+            IF(c.user_a_id = $myId, c.user_b_id IS NULL, c.user_a_id IS NULL) AS other_deleted,
             (SELECT body FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS last_body,
             (SELECT image_path FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS last_image,
             (SELECT deleted_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS last_deleted,
@@ -1046,8 +1023,8 @@ function get_conversations(PDO $pdo, $myId) {
             (SELECT COUNT(*) FROM messages m2 WHERE m2.conversation_id = c.id AND m2.sender_id != ? AND m2.is_read = 0) AS unread_count
      FROM conversations c
      LEFT JOIN reports r ON r.id = c.report_id
-     JOIN users ua ON ua.id = c.user_a_id
-     JOIN users ub ON ub.id = c.user_b_id
+     LEFT JOIN users ua ON ua.id = c.user_a_id
+     LEFT JOIN users ub ON ub.id = c.user_b_id
      WHERE c.user_a_id = ? OR c.user_b_id = ?
      ORDER BY c.is_system DESC, last_time DESC"
     );
@@ -1077,7 +1054,7 @@ function render_convo_list($conversations, $activeId = 0) {
     $isAdmin = ($_SESSION['role'] ?? '') === 'admin';
     foreach ($conversations as $c): ?>
     <?php /* A user's "Contact Admin" thread (no report attached) is drawn red so it stands out; admin-side threads stay normal. */ ?>
-    <div class="convo-row-wrap<?= $c['is_system'] ? ' convo-system' : '' ?><?= (!$isAdmin && !$c['is_system'] && !$c['report_id']) ? ' convo-inquiry' : '' ?><?= (int)$c['convo_id'] === (int)$activeId ? ' active' : '' ?>">
+    <div class="convo-row-wrap<?= $c['is_system'] ? ' convo-system' : '' ?><?= !$c['is_system'] && !empty($c['other_deleted']) ? ' convo-deleted' : '' ?><?= (!$isAdmin && !$c['is_system'] && !$c['report_id']) ? ' convo-inquiry' : '' ?><?= (int)$c['convo_id'] === (int)$activeId ? ' active' : '' ?>">
         <a class="convo-row" href="messages.php?id=<?= (int)$c['convo_id'] ?>" title="<?= $c['is_system'] ? 'System Notification' : e($c['other_first'] . ' ' . $c['other_last'] . ' — re: ' . ($c['report_id'] ? $c['item_name'] : ($c['subject'] ?: 'General Inquiry'))) ?>">
             <div>
                 <?php if (!$c['is_system'] && !empty($c['other_online'])): ?><span class="convo-online" title="Online now" aria-label="Online now"></span><?php endif; ?>
@@ -1090,7 +1067,9 @@ function render_convo_list($conversations, $activeId = 0) {
                 <?php endif; ?>
             </div>
             <p class="convo-preview">
-                <?php if ($c['last_deleted']): ?>
+                <?php if (!$c['is_system'] && !empty($c['other_deleted'])): ?>
+                    <em>User deleted — read-only</em>
+                <?php elseif ($c['last_deleted']): ?>
                     <em>Deleted message</em>
                 <?php elseif ($c['last_body']): ?>
                     <?= e(message_snippet($c['last_body'])) ?>
@@ -1101,7 +1080,7 @@ function render_convo_list($conversations, $activeId = 0) {
                 <?php endif; ?>
             </p>
         </a>
-        <?php if (!$c['is_system']): ?>
+        <?php if (!$c['is_system'] && empty($c['other_deleted'])): ?>
             <?= convo_menu_button($c['convo_id'], trim($c['other_first'] . ' ' . $c['other_last']), $c['other_email'], $c['report_id'], $c['item_name']) ?>
         <?php endif; ?>
     </div>
@@ -1453,7 +1432,7 @@ function system_user_id(PDO $pdo) {
     $find = $pdo->prepare('SELECT id FROM users WHERE email = ?');
     $find->execute([SYSTEM_USER_EMAIL]);
     $found = $find->fetchColumn();
-    if (!$found) throw new RuntimeException('The System Notifications account is missing: import sql/schema.sql (or run sql/upgrade.sql).');
+    if (!$found) throw new RuntimeException('The System Notifications account is missing: import sql/schema.sql.');
     return $id = (int) $found;
 }
 
@@ -1475,12 +1454,17 @@ function find_or_create_conversation(PDO $pdo, $reportId, $userAId, $userBId, $s
     try {
         return db_transaction($pdo, function () use ($pdo, $find, $args, $reportId, $userAId, $userBId, $subject) {
             // Serialise on the person starting it, then look again (covers the NULL-report case the UNIQUE key can't).
-            $pdo->prepare('SELECT id FROM users WHERE id = ? FOR UPDATE')->execute([$userBId]);
+            $userStmt = $pdo->prepare('SELECT id FROM users WHERE id IN (?, ?) FOR UPDATE');
+            $userStmt->execute([$userAId, $userBId]);
             $find->execute($args);
             $id = $find->fetchColumn();
             if ($id) return (int) $id;
-            $ins = $pdo->prepare('INSERT INTO conversations (report_id, subject, user_a_id, user_b_id) VALUES (?, ?, ?, ?)');
-            $ins->execute([$reportId, $subject, $userAId, $userBId]);
+            $people = $pdo->prepare('SELECT id, first_name, last_name FROM users WHERE id IN (?, ?)');
+            $people->execute([$userAId, $userBId]);
+            $names = [];
+            foreach ($people->fetchAll() as $person) $names[(int) $person['id']] = trim($person['first_name'] . ' ' . $person['last_name']);
+            $ins = $pdo->prepare('INSERT INTO conversations (report_id, subject, user_a_id, user_b_id, user_a_name, user_b_name) VALUES (?, ?, ?, ?, ?, ?)');
+            $ins->execute([$reportId, $subject, $userAId, $userBId, $names[$userAId] ?? null, $names[$userBId] ?? null]);
             return (int) $pdo->lastInsertId();
         });
     } catch (PDOException $e) {
@@ -1520,8 +1504,8 @@ function send_system_message(PDO $pdo, $userId, $body) {
     $convoId = get_or_create_system_conversation($pdo, $userId);
     if (!$convoId) return;
     $systemId = system_user_id($pdo);
-    $msg = $pdo->prepare('INSERT INTO messages (conversation_id, sender_id, body) VALUES (?, ?, ?)');
-    $msg->execute([$convoId, $systemId, $body]);
+    $msg = $pdo->prepare('INSERT INTO messages (conversation_id, sender_id, sender_name, body) VALUES (?, ?, ?, ?)');
+    $msg->execute([$convoId, $systemId, 'System Notifications', $body]);
 }
 
 /**

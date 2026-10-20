@@ -36,8 +36,8 @@ VALUES ('Admin', '', 'lostandfound@holychild.edu.ph',
         '$2b$10$lGHpy/yCxQGeZ3/wdMV1MuAWEI4jxAGse.96xFbqHF3f1OeT39/e.', 'admin', 1);
 
 -- The built-in "System Notifications" account: the sender of every automated message (possible
--- matches, status changes...). messages.sender_id / conversations.user_a_id are NOT NULL foreign
--- keys to users, so a message needs SOME user to come from. Its password hash is not a valid hash
+-- matches, status changes...). Messages and conversation participants may become NULL when a user is
+-- permanently deleted; snapshot name columns preserve the historical display name. Its password hash is not a valid hash
 -- on purpose, so nobody can ever log in as it. Its email must match SYSTEM_USER_EMAIL in
 -- includes/functions.php. The app only looks it up; it never creates it.
 INSERT INTO users (first_name, last_name, email, password_hash, role, is_verified)
@@ -48,7 +48,7 @@ VALUES ('System', 'Notifications', 'system@lost-and-found.internal', '!', 'user'
 -- ---------------------------------------------------------
 CREATE TABLE reports (
     id              INT AUTO_INCREMENT PRIMARY KEY,
-    user_id         INT NULL,       -- NULL once the reporter's account has been deleted: the report itself is kept
+    user_id         INT NULL,       -- NULL for imported reports without an owner, or after owner deletion
     type            ENUM('lost','found') NOT NULL,
     item_name       VARCHAR(120) NOT NULL,
     category        VARCHAR(60)  NOT NULL,
@@ -96,13 +96,13 @@ CREATE TABLE toasts (
     INDEX (owner)
 ) ENGINE=InnoDB;
 
--- deleted_at implements a soft delete: when a user (or admin) "deletes" a
+-- deleted_at implements a soft delete: when an admin "deletes" a
 -- report it is stamped with deleted_at instead of being removed, so it
 -- disappears from Browse/dashboard/my reports but is still recoverable.
 -- Only an admin can permanently remove a row (admin/delete_report_permanent.php),
 -- and can export a CSV backup first (admin/export_reports.php).
--- Deleting a USER account never deletes their reports: user_id just becomes NULL
--- (ON DELETE SET NULL) and the report shows "Deleted user" as its reporter.
+-- Deleting a USER account never deletes their reports: reports.user_id becomes
+-- NULL through ON DELETE SET NULL and the report remains available.
 
 -- ---------------------------------------------------------
 -- Conversations (Messaging Module)
@@ -113,14 +113,16 @@ CREATE TABLE conversations (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     report_id       INT NULL,       -- NULL = a direct "Contact Admin" thread, or a system thread
     subject         VARCHAR(150) DEFAULT NULL, -- used only when report_id IS NULL
-    user_a_id       INT NOT NULL,   -- report owner, or the admin/system account
-    user_b_id       INT NOT NULL,   -- the one who reached out, or who's being notified
+    user_a_id       INT NULL,       -- report owner, or the admin/system account
+    user_b_id       INT NULL,       -- the one who reached out, or who's being notified
+    user_a_name     VARCHAR(120) DEFAULT NULL, -- retained display name if the account is deleted
+    user_b_name     VARCHAR(120) DEFAULT NULL,
     is_system       TINYINT(1) NOT NULL DEFAULT 0, -- see note below
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uniq_convo (report_id, user_a_id, user_b_id),
     FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_a_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_b_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_a_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_b_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- is_system marks a user's one standing "System Notification" thread (used
@@ -141,14 +143,15 @@ CREATE TABLE conversations (
 CREATE TABLE messages (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     conversation_id INT NOT NULL,
-    sender_id       INT NOT NULL,
+    sender_id       INT NULL,
+    sender_name     VARCHAR(120) DEFAULT NULL, -- retained display name if the account is deleted
     body            TEXT,
     image_path      VARCHAR(255) DEFAULT NULL,
     is_read         TINYINT(1) NOT NULL DEFAULT 0,
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at      DATETIME DEFAULT NULL,
     FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
-    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- deleted_at on messages implements a soft delete, same idea as on reports:

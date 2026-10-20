@@ -6,8 +6,7 @@ message each other; admins manage reports and users. Emails go out through PHPMa
 ## Install
 1. Copy the folder into `htdocs/` (e.g. `C:\xampp\htdocs\lost-and-found`) and start **Apache** + **MySQL**.
 2. Import `sql/schema.sql` in phpMyAdmin. It creates the database, every table, the default admin and the
-   built-in System Notifications account. (A database made from an older schema: run `sql/upgrade.sql` once — it
-   only adds the `verify_attempts` column; the site would also add that by itself the first time it needs it.)
+   built-in System Notifications account.
 3. `composer install` in the folder (PHPMailer; needs `extension=zip`).
 4. `config/db.php`: DB login and `BASE_URL`. Links in emails follow how the page was opened: via `localhost` they use this computer's network IP automatically, via an IP or the `BASE_URL` host they use that address (so set `BASE_URL` to your public address, e.g. ngrok, if people are off the LAN).
 5. Email: copy `config/mail.local.example.php` to `config/mail.local.php` and fill in your own values:
@@ -57,7 +56,8 @@ Live updates hold one PHP worker per open page, so use Apache/XAMPP (not single-
   thread, and a search box over the conversation list. The three-dot menu (shown on hover) has the other person's
   email, the report, and delete conversation.
 - **Admin:** dashboard counts, Manage Reports (filters, sort, bulk actions, trash, CSV export / import), Manage
-  Users (verify, delete, bulk). Deleting a user keeps their reports (shown as "Deleted user").
+  Users (verify, delete, bulk). Deleting a user permanently removes the account row, keeps reports with
+  `reports.user_id = NULL`, and preserves conversations/messages with the deleted user's saved display name.
 
 ## How it works
 **Live updates (Server-Sent Events).** Every logged-in page opens one `EventSource` to `ajax/stream.php` (opened at
@@ -77,6 +77,11 @@ filters, sort, ticks and scroll. A connection is recycled every ~55 s; the brows
 its next request after a 15 s grace (reload / quick reopen is fine). If the beacon never arrives, the safety net
 is the timeout: no request for 60 s and no live page ends the session. Every request is checked on the server
 (account still exists, role read from the database); JavaScript is never the security.
+
+**Automatic process settings.** Automatic intervals are centralized in
+[`config/timing.php`](config/timing.php): session abandonment (60 seconds), leave grace (15 seconds), online
+presence (25 seconds), automatic report closing (30 days), stale conversation deletion (30 days), and resolved
+check-ins (14 days). Change the values there instead of editing individual functions.
 
 **Emails.** Nothing makes a page wait for the mail server. `mail/emails.php` hands each email to a background
 process (`mail/send_cli.php`), else to `mail/send_job.php` over HTTP, else sends inline. A failed send leaves a toast
@@ -117,5 +122,5 @@ admin actions on accounts and CSV import need the admin's password (checked agai
 login rate limiting (verification and reset codes are limited, passwords are not).
 
 ## Files
-`sql/` schema + upgrade · `config/` settings · `includes/functions.php` shared logic · `ajax/` stream, presence,
+`sql/` schema · `config/` settings · `includes/functions.php` shared logic · `ajax/` stream, presence,
 helpers · `mail/` email sending · `admin/` admin pages · `js/main.js`, `css/style.css` · top-level `*.php` pages.

@@ -152,8 +152,9 @@ try {
     );
 
     $newMsgs = $pdo->prepare(
-        "SELECT m.id, m.body, m.image_path, m.created_at, m.sender_id, m.deleted_at, u.first_name
-         FROM messages m JOIN users u ON u.id = m.sender_id
+        "SELECT m.id, m.body, m.image_path, m.created_at, m.sender_id, m.deleted_at,
+                COALESCE(u.first_name, m.sender_name) AS first_name
+         FROM messages m LEFT JOIN users u ON u.id = m.sender_id
          WHERE m.conversation_id = ? AND m.id > ?
          ORDER BY m.id ASC"
     );

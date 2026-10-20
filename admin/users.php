@@ -39,7 +39,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <?= icon('check') ?> Verify Selected
             </button>
             <button type="button" class="btn btn-danger" data-bulk-action="delete" data-bulk-password="1"
-                    data-confirm="This permanently deletes the selected accounts, their reports and their conversations, and cannot be undone. Enter your password to confirm it's you.">
+                    data-confirm="This removes the selected accounts from use. Their reports and conversations are preserved, but the accounts cannot log in or receive new messages. Enter your password to confirm it's you.">
                 <?= icon('trash') ?> Delete Selected
             </button>
         </div>
@@ -113,7 +113,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php endif; ?>
                     <form method="post" action="delete_user.php" class="inline-form confirm-form-password"
                           data-confirm-title="Delete this account?"
-                          data-confirm-message="This permanently deletes <?= e($u['first_name'] . ' ' . $u['last_name']) ?>'s account and cannot be undone. Enter your password to confirm it's you."
+                          data-confirm-message="This removes <?= e($u['first_name'] . ' ' . $u['last_name']) ?>'s account from use. Their reports and conversations are preserved, but the account cannot log in or receive new messages. Enter your password to confirm it's you."
                           data-confirm-label="Delete Account"
                           data-confirm-verify-url="verify_password.php">
                         <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">

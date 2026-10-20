@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/timing.php';
 /**
  * Database connection (PDO) + global app settings.
  * Adjust DB_* constants to match your XAMPP / MySQL setup.

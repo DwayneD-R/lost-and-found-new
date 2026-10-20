@@ -93,6 +93,18 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+/* A modal owns the interaction while it is open. Keep the document from
+   scrolling behind it, especially during touch gestures on mobile. */
+html.modal-open,
+body.modal-open {
+    overscroll-behavior: none;
+}
+html.modal-open { overflow: hidden; }
+body.modal-open .modal-dialog,
+body.modal-open .item-modal-dialog {
+    overscroll-behavior: contain;
+}
+
 /* Campus photo behind the whole site: fixed to the window (it doesn't move when you scroll), at 75% opacity
    (25% faded) and lightly blurred. It sits behind everything; the header has a solid white fill so it never shows there.
    The negative inset hides the soft edges the blur would otherwise leave. */
@@ -1170,6 +1182,12 @@ body.messenger-page main.container > .flash { flex-shrink: 0; }
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
 }
+.chat-user-deleted-note {
+    color: var(--info);
+    background: var(--info-tint);
+    border-color: #B8CDE4;
+    font-weight: 600;
+}
 .chat-form input[type="text"] {
     flex: 1;
     min-width: 180px;
@@ -1741,6 +1759,9 @@ body.messenger-page main.container > .flash { flex-shrink: 0; }
 .convo-row-wrap.convo-system .convo-preview { color: rgba(255, 255, 255, 0.82); }
 .convo-row-wrap.convo-system .badge-count { background: #fff; color: var(--info); }
 .convo-row-wrap.convo-system.active { background: #12345A; border-color: transparent; box-shadow: 0 4px 12px rgba(12, 26, 46, 0.3); }
+.convo-row-wrap.convo-deleted { border-color: #B8CDE4; background: var(--info-tint); }
+.convo-row-wrap.convo-deleted .convo-preview { color: var(--info); }
+.convo-row-wrap.convo-deleted.active { border-color: transparent; background: #DCEAF6; box-shadow: 0 4px 12px rgba(28, 75, 124, 0.18); }
 .convo-row-wrap.active:not(.convo-system) { border-color: transparent; background: var(--maroon-tint); box-shadow: 0 4px 12px rgba(91, 28, 38, 0.2); }
 .convo-row-wrap.active:not(.convo-system) .convo-row,
 .convo-row-wrap.active:not(.convo-system) .convo-row:hover { background: var(--maroon-tint); }
@@ -2550,7 +2571,7 @@ body.messenger-page main.container > .flash { flex-shrink: 0; }
 
 /* ---- "Who found / claimed it?" picker (status -> Resolved) ---- */
 .resolver-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 4px; max-height: 260px; overflow-y: auto; }
-.resolver-choice { width: 100%; text-align: center; }
+.resolver-select { width: 100%; min-height: 44px; }
 .resolver-other { display: flex; gap: 8px; margin-top: 4px; }
 .resolver-other input { flex: 1; min-width: 0; }
 .resolver-form { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }

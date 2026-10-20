@@ -36,6 +36,11 @@ if ($report['status'] === 'closed' && ($_SESSION['role'] ?? '') !== 'admin') {
 
 // A conversation always stores (report_id, user_a_id = owner, user_b_id = other party).
 // Safe if the button is double-clicked, or both people start it at once: no duplicates.
-$convoId = find_or_create_conversation($pdo, $reportId, $ownerId, $myId);
+try {
+    $convoId = find_or_create_conversation($pdo, $reportId, $ownerId, $myId);
+} catch (RuntimeException $e) {
+    set_flash($e->getMessage(), 'info');
+    redirect('item.php?id=' . $reportId);
+}
 
 redirect('messages.php?id=' . $convoId);

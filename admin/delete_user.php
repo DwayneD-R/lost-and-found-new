@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // wipe every user's System Notification thread (ON DELETE CASCADE).
         set_flash("The System Notifications account is built in and can't be deleted.", 'error');
     } elseif ($userId && $userId != $_SESSION['user_id']) {
-        // Removes their conversations and the photos in them; their reports are kept (shown as "Deleted user").
+        // Retain the account row so its conversations and messages remain available to the other participant.
         delete_user_accounts($pdo, [$userId]);
         set_flash('Account deleted.', 'success');
     }
