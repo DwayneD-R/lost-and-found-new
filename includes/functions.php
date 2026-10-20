@@ -1238,7 +1238,7 @@ function render_notice_card($text) {
     return '<div class="match-card admin-edit-card">'
          . '<div class="match-card-title">' . e(trim($title[1])) . '</div>'
          . ($pair !== '' ? '<dl class="match-card-pair">' . $pair . '</dl>' : '')
-         . ($action . $view !== '' ? '<div class="match-card-actions">' . $action . $view . '</div>' : '')
+         .($action . $view !== '' ? '<div class="match-card-actions notice-resolve-actions">' . $action . $view . '</div>' : '')
          . '</div>';
 }
 

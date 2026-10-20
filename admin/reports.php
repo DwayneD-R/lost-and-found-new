@@ -30,8 +30,8 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="page-head page-head-admin">
     <h1>Manage Reports</h1>
     <div class="admin-links">
-        <a class="btn btn-secondary" href="import_reports.php?view=<?= e($view) ?>">Import (CSV)</a>
-        <a class="btn btn-secondary" href="export_reports.php?view=<?= e($view) ?>">Export (CSV)</a>
+        <a class="btn btn-import" href="import_reports.php?view=<?= e($view) ?>">Import (CSV)</a>
+        <a class="btn btn-export" href="export_reports.php?view=<?= e($view) ?>">Export (CSV)</a>
     </div>
 </div>
 

@@ -280,13 +280,15 @@ a:hover { text-decoration: underline; }
    stays put below it, visible, instead of the whole panel growing. The
    scrollbar is hidden on purpose — scrolling still works, there's just no
    visible track/thumb cluttering a small dropdown. */
-#notif-list {
+#notif-list,
+#chat-list {
     max-height: 340px;
     overflow-y: auto;
     scrollbar-width: none;       /* Firefox */
     -ms-overflow-style: none;    /* old Edge */
 }
-#notif-list::-webkit-scrollbar { display: none; } /* Chrome, Safari */
+#notif-list::-webkit-scrollbar,
+#chat-list::-webkit-scrollbar { display: none; } /* Chrome, Safari */
 .dropdown-panel h4 { margin: 4px 8px 8px; font-size: 0.95rem; }
 .dropdown-panel a { color: var(--ink); padding: 9px 10px; border-radius: var(--radius-sm); display: block; }
 .dropdown-panel a { transition: background .12s ease, color .12s ease; }
@@ -482,6 +484,31 @@ button:hover, .btn:hover { background: var(--maroon-dark); color: #fff; text-dec
     border: 1px solid var(--error);
 }
 .btn-danger:hover { background: var(--error); color: #fff; }
+
+/* CSV actions on Manage Reports: importing is a neutral upload action, while
+   exporting is deliberately prominent and consistent with destructive/admin
+   actions elsewhere in the page. */
+.page-head-admin .btn-import {
+    background: #fff;
+    color: var(--maroon);
+    border: 1px solid var(--maroon);
+}
+.page-head-admin .btn-import:hover,
+.page-head-admin .btn-import:focus-visible {
+    background: var(--maroon-tint);
+    color: var(--maroon-dark);
+}
+.page-head-admin .btn-export {
+    background: var(--maroon-dark);
+    color: #fff;
+    border: 1px solid var(--maroon-dark);
+}
+.page-head-admin .btn-export:hover,
+.page-head-admin .btn-export:focus-visible {
+    background: var(--maroon-dark);
+    color: #fff;
+    filter: brightness(0.9);
+}
 
 /* ---------------------------------------------------------------------- */
 /* Admin report table: search bar + checkbox bulk-selection (reports.php)  */
@@ -1725,6 +1752,7 @@ body.messenger-page main.container > .flash { flex-shrink: 0; }
     gap: 14px 20px;
     align-items: start;
 }
+.resolver-card .flash:empty { display: none; }
 .report-modal-dialog .form-card .span-2 { grid-column: 1 / -1; }
 .report-modal-dialog .form-card textarea { resize: none; height: 104px; }
 .report-modal-dialog .form-submit { display: flex; justify-content: flex-end; }
@@ -1852,6 +1880,16 @@ body.messenger-page main.container > .flash { flex-shrink: 0; }
     text-align: center;
     color: #fff;
     text-decoration: none;
+}
+.chat-bubble a.match-card-btn.btn-secondary,
+.chat-bubble a.match-card-btn.btn-secondary:hover {
+    background: transparent;
+    color: var(--maroon);
+    border: 1px solid var(--maroon);
+}
+.chat-bubble a.match-card-btn.btn-secondary:hover {
+    background: var(--maroon-tint);
+    color: var(--maroon-dark);
 }
 
 /* ---- Side-by-side comparison (item.php?id=..&mine=..) ---- */
@@ -2490,6 +2528,9 @@ body.messenger-page main.container > .flash { flex-shrink: 0; }
 /* ---- Notification cards: action buttons side by side ---- */
 .match-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .match-card-actions .match-card-btn { margin-top: 0; flex: 1 1 auto; text-align: center; }
+.notice-resolve-actions { flex-direction: column; }
+.notice-resolve-actions .match-card-btn,
+.notice-resolve-actions .match-card-done { width: 100%; flex: 0 0 auto; }
 .match-card-done { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--success-tint); color: var(--success); font-weight: 600; font-size: 0.88rem; }
 .notice-action.is-done { background: var(--success-tint); color: var(--success); border: 1px solid var(--success); pointer-events: none; }
 .notice-action:disabled { opacity: 0.8; cursor: default; }
@@ -2572,6 +2613,14 @@ body.messenger-page main.container > .flash { flex-shrink: 0; }
 /* ---- "Who found / claimed it?" picker (status -> Resolved) ---- */
 .resolver-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 4px; max-height: 260px; overflow-y: auto; }
 .resolver-select { width: 100%; min-height: 44px; }
+.resolver-form .resolver-select {
+    box-sizing: border-box;
+    height: 44px;
+    padding: 0 10px;
+    border: 1px solid var(--success);
+    border-radius: 8px;
+    font-weight: 600;
+}
 .resolver-other { display: flex; gap: 8px; margin-top: 4px; }
 .resolver-other input { flex: 1; min-width: 0; }
 .resolver-form { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }

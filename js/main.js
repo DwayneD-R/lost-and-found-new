@@ -1997,7 +1997,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const claim = text.match(/^Action: (?:claim|resolve):(\d+)\s*$/m);
             if (claim || link) {
                 const actions = document.createElement('div');
-                actions.className = 'match-card-actions';
+                actions.className = 'match-card-actions' + (claim ? ' notice-resolve-actions' : '');
                 if (claim) {
                     const b = document.createElement('button');
                     b.type = 'button';

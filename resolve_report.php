@@ -70,7 +70,7 @@ require_once __DIR__ . '/includes/header.php';
 $hidden = '<input type="hidden" name="r" value="' . (int) $reportId . '"><input type="hidden" name="u" value="' . (int) $userId . '">'
         . '<input type="hidden" name="e" value="' . (int) $exp . '"><input type="hidden" name="t" value="' . e($token) . '">';
 ?>
-<div class="form-card" style="max-width:520px;margin:40px auto;text-align:center;display:block;">
+<div class="form-card resolver-card" style="max-width:520px;margin:40px auto;text-align:center;display:block;">
     <?php if ($state === 'confirm'): ?>
         <h1>Mark your report as Resolved</h1>
         <p>“<?= e($report['item_name']) ?>”</p>
@@ -78,9 +78,13 @@ $hidden = '<input type="hidden" name="r" value="' . (int) $reportId . '"><input 
         <?php if ($flash !== ''): ?><div class="flash flash-error"><?= e($flash) ?></div><?php endif; ?>
         <form method="post" action="resolve_report.php" class="resolver-form" id="resolver-form">
             <?= $hidden ?>
-            <?php foreach ($people as $p): ?>
-                <button type="submit" name="resolved_by" value="<?= (int) $p['id'] ?>" class="btn resolver-choice"><?= e($p['name']) ?></button>
-            <?php endforeach; ?>
+            <select name="resolved_by" class="status-select status-select-resolved resolver-select" aria-label="Who found or claimed the item">
+                <option value="">Select someone (optional)</option>
+                <?php foreach ($people as $p): ?>
+                    <option value="<?= (int) $p['id'] ?>"><?= e($p['name']) ?></option>
+                <?php endforeach; ?>
+                <option value="other">Someone else</option>
+            </select>
             <div class="resolver-other">
                 <input type="text" name="resolved_by_name" maxlength="120" placeholder="Someone else — type a name">
             </div>
@@ -95,10 +99,19 @@ $hidden = '<input type="hidden" name="r" value="' . (int) $reportId . '"><input 
         (function () {
             var form = document.getElementById('resolver-form');
             var input = form.querySelector('[name="resolved_by_name"]');
+            var picker = form.querySelector('[name="resolved_by"]');
             var save = document.getElementById('resolver-save');
+            var updateOtherField = function () {
+                var isOther = picker.value === 'other';
+                input.disabled = !isOther;
+                input.required = isOther;
+                if (!isOther) input.value = '';
+            };
+            picker.addEventListener('change', updateOtherField);
+            updateOtherField();
             input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); save.click(); } });
             form.addEventListener('submit', function (e) {
-                if (e.submitter === save && input.value.trim() === '') {
+                if (e.submitter === save && picker.value === 'other' && input.value.trim() === '') {
                     e.preventDefault();
                     Toast.show('Type a name first, or pick someone from the list, or skip.', 'error');
                     input.focus();
