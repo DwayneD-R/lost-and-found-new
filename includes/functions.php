@@ -375,7 +375,7 @@ function icon($name) {
 const SYSTEM_USER_EMAIL = 'system@lost-and-found.internal';
 
 /** Categories offered by the report forms; also the Category filter's options. */
-const REPORT_CATEGORIES = ['ID / Cards', 'Electronics', 'Bags', 'Clothing/Accessories', 'Books/Documents', 'Keys', 'Other'];
+const REPORT_CATEGORIES = ['ID / Cards', 'Electronics', 'Bags', 'Clothing/Accessories', 'Books/Documents', 'Keys', 'Wallet', 'Other'];
 
 /**
  * The search box + filter dropdowns shown above every report table (Manage
