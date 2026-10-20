@@ -17,8 +17,6 @@ message each other; admins manage reports and users. Emails go out through PHPMa
    (`lostandfound@holychild.edu.ph`) is not a real mailbox, so every email meant for it is delivered to this address
    instead (if you leave it out, it goes to `SMTP_USERNAME`).
 6. Open `http://localhost/lost-and-found/`. Default admin: `lostandfound@holychild.edu.ph` / `Admin123!` — change it.
-   (A database created from an older schema keeps its old admin address; the email redirect only matches
-   `lostandfound@holychild.edu.ph`.)
 
 Live updates hold one PHP worker per open page, so use Apache/XAMPP (not single-threaded `php -S`).
 
@@ -35,10 +33,10 @@ Live updates hold one PHP worker per open page, so use Apache/XAMPP (not single-
     the same for every address, so neither reveals which emails have accounts.
 - **Reports:** lost / found, category, photo (JPG/PNG/GIF, 5 MB, checked by content, not just file name), edit,
   delete (to trash), restore. Date can't be in the future; location max 150 and description max 2000 characters.
-  Statuses: **Active → Resolved → Closed**. Marking Resolved asks who found / claimed it: one button per
-  person the owner talked to about that report, a text box for someone else (the popup's **Save** button saves the
-  typed name; an empty box shows an error toast and saves nothing), or Skip. The email link opens the same choices on
-  its own page. The server checks a picked person against the real conversation list. Active reports close by themselves after 30 days
+  Statuses: **Active → Resolved → Closed**. Marking Resolved asks who found / claimed it: a full-width dropdown
+  listing each person the owner talked to about that report, a text box for someone else (the popup's
+  **Save** button saves the typed name; an empty box shows an error toast and saves nothing), or Skip. The email link
+  opens the same choices on its own page. The server checks a picked person against the real conversation list. Active reports close by themselves after 30 days
   (`REPORT_CLOSE_DAYS`); a Resolved report never auto-closes. Every 14 days an Active report's owner is asked
   "has it been resolved?" (System Notification + email with a one-click button).
 - **Possible matches:** a new or edited (type / category changed) report is scored against active reports of the
